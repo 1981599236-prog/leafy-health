@@ -28,7 +28,7 @@ export default function Page() {
   const growth = (bloodDone ? 30 : 0) + (intake > 0 ? 30 : 0) + (exerciseTotal > 0 ? 30 : 0); const totalOut = bmr + exerciseTotal; const balance = intake - totalOut;
   const days = Array.from({ length: new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate() }, (_, i) => i + 1); const blanks = new Date(now.getFullYear(), now.getMonth(), 1).getDay();
 
-  useEffect(() => { supabase.auth.getSession().then(({ data }) => { setUser(data.session?.user ?? null); setReady(true); }); const { data } = supabase.auth.onAuthStateChange((_event, session) => { setUser(session?.user ?? null); setReady(true); }); return () => data.subscription.unsubscribe(); }, []);
+  useEffect(() => { setReady(true); supabase.auth.getSession().then(({ data }) => setUser(data.session?.user ?? null)); const { data } = supabase.auth.onAuthStateChange((_event, session) => { setUser(session?.user ?? null); setReady(true); }); return () => data.subscription.unsubscribe(); }, []);
   useEffect(() => { if (user) void loadData(); else { setProfile(null); setBlood({ systolic: '', diastolic: '' }); setIntake(0); setExerciseTotal(0); setChecked(new Set()); } }, [user]);
   useEffect(() => { if (!toast) return; const t = window.setTimeout(() => setToast(''), 2400); return () => window.clearTimeout(t); }, [toast]);
 
