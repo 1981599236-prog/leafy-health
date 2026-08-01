@@ -28,25 +28,22 @@ export default function Page() {
   const growth = (bloodDone ? 30 : 0) + (intake > 0 ? 30 : 0) + (exerciseTotal > 0 ? 30 : 0); const totalOut = bmr + exerciseTotal; const balance = intake - totalOut;
   const days = Array.from({ length: new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate() }, (_, i) => i + 1); const blanks = new Date(now.getFullYear(), now.getMonth(), 1).getDay();
 
-  useEffect(() => { supabase.auth.getUser().then(({ data }) => { setUser(data.user); setReady(true); }); const { data } = supabase.auth.onAuthStateChange((_event, session) => { setUser(session?.user ?? null); setReady(true); }); return () => data.subscription.unsubscribe(); }, []);
+  useEffect(() => { supabase.auth.getSession().then(({ data }) => { setUser(data.session?.user ?? null); setReady(true); }); const { data } = supabase.auth.onAuthStateChange((_event, session) => { setUser(session?.user ?? null); setReady(true); }); return () => data.subscription.unsubscribe(); }, []);
   useEffect(() => { if (user) void loadData(); else { setProfile(null); setBlood({ systolic: '', diastolic: '' }); setIntake(0); setExerciseTotal(0); setChecked(new Set()); } }, [user]);
   useEffect(() => { if (!toast) return; const t = window.setTimeout(() => setToast(''), 2400); return () => window.clearTimeout(t); }, [toast]);
 
   async function loadData() {
     if (!user) return;
-    const [profileRes, bpRes, foodRes, exerciseRes, monthBp, monthFood, monthExercise] = await Promise.all([
+    const [profileRes, bpRes, foodRes, exerciseRes] = await Promise.all([
       supabase.from('profiles').select('*').eq('id', user.id).maybeSingle(),
-      supabase.from('blood_pressure_records').select('systolic,diastolic,recorded_at').eq('user_id', user.id).gte('recorded_at', dayStart).order('recorded_at', { ascending: false }).limit(1),
-      supabase.from('food_records').select('calories,recorded_at').eq('user_id', user.id).gte('recorded_at', dayStart),
-      supabase.from('exercise_records').select('activity_type,duration_minutes,calories,recorded_at').eq('user_id', user.id).gte('recorded_at', dayStart).order('recorded_at', { ascending: false }),
-      supabase.from('blood_pressure_records').select('recorded_at').eq('user_id', user.id).gte('recorded_at', monthStart),
-      supabase.from('food_records').select('recorded_at').eq('user_id', user.id).gte('recorded_at', monthStart),
-      supabase.from('exercise_records').select('recorded_at').eq('user_id', user.id).gte('recorded_at', monthStart),
+      supabase.from('blood_pressure_records').select('systolic,diastolic,recorded_at').eq('user_id', user.id).gte('recorded_at', monthStart).order('recorded_at', { ascending: false }),
+      supabase.from('food_records').select('calories,recorded_at').eq('user_id', user.id).gte('recorded_at', monthStart),
+      supabase.from('exercise_records').select('activity_type,duration_minutes,calories,recorded_at').eq('user_id', user.id).gte('recorded_at', monthStart).order('recorded_at', { ascending: false }),
     ]);
     if (profileRes.data) { const p = profileRes.data; setProfile({ display_name: p.display_name, gender: p.gender, age: String(p.age), height_cm: String(p.height_cm), weight_kg: String(p.weight_kg), activity_level: p.activity_level, goal: p.goal }); }
-    if (bpRes.data?.[0]) { const bp = bpRes.data[0]; const key = `${bp.systolic}/${bp.diastolic}`; savedBlood.current = key; setBlood({ systolic: String(bp.systolic), diastolic: String(bp.diastolic) }); setBloodDone(true); } else { setBloodDone(false); }
-    setIntake((foodRes.data ?? []).reduce((sum, item) => sum + item.calories, 0)); const dayExercise = exerciseRes.data ?? []; setExerciseTotal(dayExercise.reduce((sum, item) => sum + item.calories, 0)); if (dayExercise[0]) setLatestExercise(dayExercise[0]);
-    const checkedDays = new Set<number>(); [...(monthBp.data ?? []), ...(monthFood.data ?? []), ...(monthExercise.data ?? [])].forEach(item => checkedDays.add(formatDate(item.recorded_at))); setChecked(checkedDays);
+    const todayBp = (bpRes.data ?? []).find(item => item.recorded_at >= dayStart); if (todayBp) { const key = `${todayBp.systolic}/${todayBp.diastolic}`; savedBlood.current = key; setBlood({ systolic: String(todayBp.systolic), diastolic: String(todayBp.diastolic) }); setBloodDone(true); } else { setBloodDone(false); }
+    const todayFood = (foodRes.data ?? []).filter(item => item.recorded_at >= dayStart); setIntake(todayFood.reduce((sum, item) => sum + item.calories, 0)); const dayExercise = (exerciseRes.data ?? []).filter(item => item.recorded_at >= dayStart); setExerciseTotal(dayExercise.reduce((sum, item) => sum + item.calories, 0)); if (dayExercise[0]) setLatestExercise(dayExercise[0]);
+    const checkedDays = new Set<number>(); [...(bpRes.data ?? []), ...(foodRes.data ?? []), ...(exerciseRes.data ?? [])].forEach(item => checkedDays.add(formatDate(item.recorded_at))); setChecked(checkedDays);
   }
   async function signIn() { const { error } = await supabase.auth.signInWithOtp({ email, options: { emailRedirectTo: window.location.origin } }); if (error) setToast(error.message); else setSent(true); }
   async function saveProfile() { if (!user || !draft.age || !draft.height_cm || !draft.weight_kg) return setToast('请补全年龄、身高和体重'); const row = { id: user.id, display_name: draft.display_name.trim() || '叶', gender: draft.gender, age: Number(draft.age), height_cm: Number(draft.height_cm), weight_kg: Number(draft.weight_kg), activity_level: draft.activity_level, goal: draft.goal, updated_at: new Date().toISOString() }; const { error } = await supabase.from('profiles').upsert(row); if (error) return setToast('保存失败：' + error.message); setProfile({ ...draft, display_name: row.display_name }); setToast('档案已保存'); }
