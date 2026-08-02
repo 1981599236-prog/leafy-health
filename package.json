@@ -2,8 +2,13 @@
   "name": "leafy-health",
   "version": "0.1.0",
   "private": true,
-  "scripts": { "dev": "next dev", "build": "next build", "start": "next start" },
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start"
+  },
   "dependencies": {
+    "@cloudbase/js-sdk": "^3.7.0",
     "@supabase/supabase-js": "^2.111.0",
     "next": "^15.5.22",
     "react": "^19.0.0",
