@@ -30,3 +30,48 @@ NEXT_PUBLIC_CLOUDBASE_ENV_ID=你的完整环境ID
 ## 后续
 
 本次迁移完成后，先可在现有 Vercel 地址测试 CloudBase 登录和数据保存；正式国内部署时，将改由 CloudBase 静态网站托管或 HTTP 访问服务提供访问地址。不要将 CloudBase 的 API Key、SecretId 或 SecretKey 放进前端环境变量。
+# 一叶健康记录
+
+这是一个给个人使用的移动端健康记录 Web App，记录血压、饮食与运动，并保存到腾讯云 CloudBase。
+
+## 本地启动
+
+1. 在项目根目录创建 `.env.local`：
+
+   ```env
+   NEXT_PUBLIC_CLOUDBASE_ENV_ID=leafy-health-d6g6dzt250e0fc4d5
+   ```
+
+2. 安装依赖并启动：
+
+   ```bash
+   npm install
+   npm run dev
+   ```
+
+浏览器打开 `http://localhost:3000`。
+
+## 部署到腾讯云 CloudBase
+
+应用已配置为静态导出：执行 `npm run build` 后会生成 `out` 文件夹。CloudBase 的静态网站托管可以直接部署这个文件夹，不需要自己购买服务器。
+
+在 CloudBase 控制台打开 **静态网站托管**，选择 Git 仓库部署，填写：
+
+- 仓库：`1981599236-prog/leafy-health`
+- 分支：`main`
+- 安装命令：`npm install`
+- 构建命令：`npm run build`
+- 发布目录：`out`
+
+部署成功后，请使用 CloudBase 给出的 `tcloudbaseapp.com` 网站地址访问。这样网站与登录、数据服务都在同一个腾讯云环境中，避免 Vercel 与 CloudBase 之间的跨域访问问题。
+
+## 数据库集合
+
+CloudBase 文档型数据库使用以下集合：
+
+- `health_profiles`
+- `health_blood`
+- `health_food`
+- `health_exercise`
+
+每个集合应采用“读取和修改本人数据”权限规则，使每位用户只能访问自己的记录。
