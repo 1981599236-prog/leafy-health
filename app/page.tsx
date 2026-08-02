@@ -11,7 +11,16 @@ type CloudUser = { id: string; username?: string };
 const emptyProfile: Profile = { display_name: '叶', gender: '女', age: '', height_cm: '', weight_kg: '', activity_level: '久坐', goal: '保持' };
 const exercises = [{ activity_type: '散步', emoji: '🚶', duration_minutes: 30, calories: 110 }, { activity_type: '跑步', emoji: '🏃', duration_minutes: 30, calories: 280 }, { activity_type: '力量训练', emoji: '🏋️', duration_minutes: 40, calories: 250 }, { activity_type: '骑车', emoji: '🚲', duration_minutes: 30, calories: 180 }];
 const formatDate = (value: string) => new Date(value).getDate();
-const errorMessage = (error: unknown) => error instanceof Error ? error.message : '网络请求未完成，请稍后重试';
+function errorMessage(error: unknown) {
+  if (error instanceof Error) return error.message;
+  if (typeof error === 'string') return error;
+  if (error && typeof error === 'object') {
+    const item = error as Record<string, unknown>;
+    const message = item.message ?? item.error_description ?? item.msg ?? item.code;
+    if (typeof message === 'string') return message;
+  }
+  return '网络请求未完成，请稍后重试';
+}
 function currentUser(result: any): CloudUser | null { const user = result?.data?.session?.user ?? result?.data?.user ?? result?.session?.user ?? result?.user; const id = user?.id ?? user?.uid ?? user?.sub; return id ? { id, username: user.username } : null; }
 // 保留页面末尾的退出按钮写法；实际退出的是 CloudBase 会话。
 const supabase = { auth: { signOut: async () => { await cloudAuth.signOut(); window.location.reload(); } } };
