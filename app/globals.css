@@ -689,24 +689,144 @@ nav .active {
   font-size: 14px;
   margin: 0;
 }
-.trend div {
-  height: 70px;
-  display: flex;
-  align-items: end;
-  gap: 8%;
-  padding: 7px 5px;
-  border-bottom: 1px solid var(--line);
-  margin: 8px 0;
-}
-.trend i {
-  display: block;
-  width: 7%;
-  background: #96b77f;
-  border-radius: 5px 5px 1px 1px;
-}
 .trend small {
   font-size: 10px;
   color: #879186;
+}
+.trend-tabs {
+  display: flex;
+  gap: 7px;
+  margin: -8px 0 14px;
+}
+.trend-tabs button {
+  flex: 1;
+  border: 1px solid var(--line);
+  background: var(--paper);
+  color: var(--muted);
+  border-radius: 12px;
+  padding: 10px;
+  font-size: 12px;
+}
+.trend-tabs button.active {
+  background: #dcebd0;
+  border-color: #c4d7b6;
+  color: #557746;
+  font-weight: 700;
+}
+.trend-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: start;
+  gap: 10px;
+}
+.trend-heading > span {
+  color: #77925f;
+  background: #edf4e7;
+  border-radius: 10px;
+  padding: 4px 7px;
+  font-size: 10px;
+}
+.trend-heading small {
+  display: block;
+  margin-top: 4px;
+}
+.blood-chart,
+.metric-chart {
+  height: 132px;
+  display: flex;
+  gap: 4px;
+  align-items: end;
+  margin-top: 12px;
+  overflow-x: auto;
+  padding: 4px 0 1px;
+  border-bottom: 1px solid var(--line);
+}
+.blood-day,
+.metric-day {
+  min-width: 31px;
+  flex: 1;
+  height: 122px;
+  display: grid;
+  grid-template-rows: 98px 18px;
+  align-items: end;
+  justify-items: center;
+  background: transparent;
+  padding: 0;
+  color: #879186;
+}
+.blood-day {
+  border-radius: 9px;
+}
+.blood-day.has-record:active,
+.blood-day.selected {
+  background: #edf4e7;
+}
+.blood-bars {
+  height: 92px;
+  width: 100%;
+  display: flex;
+  align-items: end;
+  justify-content: center;
+  gap: 3px;
+}
+.blood-bars i {
+  width: 8px;
+  border-radius: 5px 5px 1px 1px;
+}
+.blood-bars .systolic {
+  background: #8faf75;
+}
+.blood-bars .diastolic {
+  background: #c9aa76;
+}
+.blood-day small,
+.metric-day small {
+  font-size: 9px;
+  white-space: nowrap;
+}
+.metric-day i {
+  width: 11px;
+  background: #9ab980;
+  border-radius: 5px 5px 1px 1px;
+}
+.metric-day i.negative {
+  background: #c69572;
+}
+.trend-detail {
+  background: #e9f1e2;
+  border-radius: 17px;
+  padding: 14px 15px;
+  margin: -3px 0 12px;
+}
+.trend-detail > p {
+  color: #6f8168;
+  margin: 0 0 10px;
+  font-size: 11px;
+}
+.trend-detail > div {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+.trend-detail span {
+  display: grid;
+  grid-template-columns: auto auto 1fr;
+  align-items: end;
+  column-gap: 4px;
+}
+.trend-detail small {
+  grid-column: 1 / -1;
+  margin-bottom: 4px;
+}
+.trend-detail b {
+  font-size: 18px;
+  color: #4d6048;
+}
+.trend-detail em {
+  color: #81907b;
+  font-size: 9px;
+  font-style: normal;
+  padding-bottom: 3px;
 }
 .profilecard {
   display: flex;

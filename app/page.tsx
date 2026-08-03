@@ -19,6 +19,15 @@ type Exercise = {
   calories: number;
 };
 type Blood = { systolic: string; diastolic: string; heart_rate: string };
+type BloodRecord = {
+  _id?: string;
+  systolic: number;
+  diastolic: number;
+  heart_rate?: number;
+  createdAt: string;
+};
+type TrendDay = { key: string; label: string };
+type MetricPoint = TrendDay & { value: number; hasValue: boolean };
 type CloudUser = { id: string; username?: string };
 const emptyProfile: Profile = {
   display_name: "叶",
@@ -41,6 +50,25 @@ const exercises = [
   { activity_type: "骑车", emoji: "🚲", duration_minutes: 30, calories: 180 },
 ];
 const formatDate = (value: string) => new Date(value).getDate();
+const dayKey = (value: Date | string) => {
+  const date = typeof value === "string" ? new Date(value) : value;
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+};
+const trendDaysFor = (count: number): TrendDay[] => {
+  const today = new Date();
+  today.setHours(12, 0, 0, 0);
+  return Array.from({ length: count }, (_, index) => {
+    const date = new Date(today);
+    date.setDate(today.getDate() - (count - index - 1));
+    return { key: dayKey(date), label: `${date.getMonth() + 1}/${date.getDate()}` };
+  });
+};
+const caloriesByDay = (rows: any[]) =>
+  rows.reduce((map, row) => {
+    const key = dayKey(row.createdAt);
+    map.set(key, (map.get(key) ?? 0) + Number(row.calories ?? 0));
+    return map;
+  }, new Map<string, number>());
 function errorMessage(error: unknown) {
   if (error instanceof Error) return error.message;
   if (typeof error === "string") return error;
@@ -166,6 +194,11 @@ export default function Page() {
       heart_rate: "",
     }),
     [bloodDone, setBloodDone] = useState(false);
+  const [bloodHistory, setBloodHistory] = useState<BloodRecord[]>([]),
+    [foodHistory, setFoodHistory] = useState<any[]>([]),
+    [exerciseHistory, setExerciseHistory] = useState<any[]>([]),
+    [trendRange, setTrendRange] = useState<7 | 30>(7),
+    [selectedTrendDay, setSelectedTrendDay] = useState<string | null>(null);
   const [intake, setIntake] = useState(0),
     [exerciseTotal, setExerciseTotal] = useState(0),
     [latestExercise, setLatestExercise] = useState<Exercise | null>(null);
@@ -209,6 +242,44 @@ export default function Page() {
     (_, i) => i + 1,
   );
   const blanks = new Date(now.getFullYear(), now.getMonth(), 1).getDay();
+  const trendDays = useMemo(() => trendDaysFor(trendRange), [trendRange]);
+  const bloodTrendDays = useMemo(() => {
+    const latestByDay = new Map<string, BloodRecord>();
+    bloodHistory.forEach((record) => {
+      const key = dayKey(record.createdAt);
+      if (!latestByDay.has(key)) latestByDay.set(key, record);
+    });
+    return trendDays.map((day) => ({ ...day, record: latestByDay.get(day.key) }));
+  }, [bloodHistory, trendDays]);
+  const foodTrend = useMemo<MetricPoint[]>(() => {
+    const totals = caloriesByDay(foodHistory);
+    return trendDays.map((day) => ({
+      ...day,
+      value: totals.get(day.key) ?? 0,
+      hasValue: totals.has(day.key),
+    }));
+  }, [foodHistory, trendDays]);
+  const exerciseTrend = useMemo<MetricPoint[]>(() => {
+    const totals = caloriesByDay(exerciseHistory);
+    return trendDays.map((day) => ({
+      ...day,
+      value: totals.get(day.key) ?? 0,
+      hasValue: totals.has(day.key),
+    }));
+  }, [exerciseHistory, trendDays]);
+  const balanceTrend = useMemo<MetricPoint[]>(() => {
+    return trendDays.map((day, index) => {
+      const hasValue = foodTrend[index].hasValue || exerciseTrend[index].hasValue;
+      return {
+        ...day,
+        value: foodTrend[index].value - (bmr + exerciseTrend[index].value),
+        hasValue,
+      };
+    });
+  }, [bmr, exerciseTrend, foodTrend, trendDays]);
+  const selectedBlood = bloodTrendDays.find(
+    (day) => day.key === selectedTrendDay,
+  );
 
   useEffect(() => {
     let active = true;
@@ -236,6 +307,10 @@ export default function Page() {
       setIntake(0);
       setExerciseTotal(0);
       setChecked(new Set());
+      setBloodHistory([]);
+      setFoodHistory([]);
+      setExerciseHistory([]);
+      setSelectedTrendDay(null);
     }
   }, [user]);
   useEffect(() => {
@@ -249,7 +324,8 @@ export default function Page() {
     try {
       // 集合已设为“读取和修改本人数据”，CloudBase 会在服务端按当前登录用户
       // 自动筛选记录；不额外按 _openid 查询，以兼容邮箱账号的 uid 身份。
-      const own = (collection: string) => cloudDb.collection(collection).get();
+      const own = (collection: string) =>
+        cloudDb.collection(collection).limit(100).get();
       const [profileRes, bpRes, foodRes, exerciseRes] = await Promise.all([
         own("health_profiles"),
         own("health_blood"),
@@ -274,6 +350,13 @@ export default function Page() {
       const bpRows = (bpRes.data ?? []) as any[];
       const foodRows = (foodRes.data ?? []) as any[];
       const exerciseRows = (exerciseRes.data ?? []) as any[];
+      setBloodHistory(
+        bpRows
+          .filter((row) => row.createdAt)
+          .sort((a, b) => String(b.createdAt).localeCompare(String(a.createdAt))),
+      );
+      setFoodHistory(foodRows.filter((row) => row.createdAt));
+      setExerciseHistory(exerciseRows.filter((row) => row.createdAt));
       const todayBp = bpRows.find((item) => item.createdAt >= dayStart);
       if (todayBp) {
         const key = `${todayBp.systolic}/${todayBp.diastolic}/${todayBp.heart_rate ?? ""}`;
@@ -878,29 +961,77 @@ export default function Page() {
             <p>慢慢看见你的变化</p>
             <h1>健康趋势</h1>
           </header>
-          <Trend
-            title="血压趋势"
-            text={
-              bloodDone
-                ? `最近一次 ${blood.systolic} / ${blood.diastolic}`
-                : "记录一次血压，就从这里开始"
-            }
-            bars={[42, 60, 52, 69, 58, 73, 65]}
+          <div className="trend-tabs" aria-label="趋势范围">
+            <button
+              className={trendRange === 7 ? "active" : ""}
+              onClick={() => {
+                setTrendRange(7);
+                setSelectedTrendDay(null);
+              }}
+            >
+              最近 7 天
+            </button>
+            <button
+              className={trendRange === 30 ? "active" : ""}
+              onClick={() => {
+                setTrendRange(30);
+                setSelectedTrendDay(null);
+              }}
+            >
+              最近 30 天
+            </button>
+          </div>
+          <BloodTrend
+            days={bloodTrendDays}
+            selectedDay={selectedTrendDay}
+            onSelect={setSelectedTrendDay}
           />
-          <Trend
+          {selectedBlood?.record && (
+            <section className="trend-detail">
+              <p>{selectedBlood.label} 的记录</p>
+              <div>
+                <span>
+                  <small>血压</small>
+                  <b>
+                    {selectedBlood.record.systolic} / {selectedBlood.record.diastolic}
+                  </b>
+                  <em>mmHg</em>
+                </span>
+                <span>
+                  <small>心率</small>
+                  <b>{selectedBlood.record.heart_rate ?? "—"}</b>
+                  <em>bpm</em>
+                </span>
+              </div>
+            </section>
+          )}
+          <MetricTrend
+            title="心率趋势"
+            points={bloodTrendDays.map((day) => ({
+              ...day,
+              value: Number(day.record?.heart_rate ?? 0),
+              hasValue: day.record?.heart_rate != null,
+            }))}
+            unit="bpm"
+            note="记录心率后显示"
+          />
+          <MetricTrend
             title="摄入热量"
-            text={`今日已记录 ${intake} kcal`}
-            bars={[45, 63, 52, 76, 48, 67, 58]}
+            points={foodTrend}
+            unit="kcal"
+            note="记录饮食后显示"
           />
-          <Trend
+          <MetricTrend
             title="运动消耗"
-            text={`今日运动消耗 ${exerciseTotal} kcal`}
-            bars={[28, 55, 36, 74, 40, 62, 51]}
+            points={exerciseTrend}
+            unit="kcal"
+            note="记录运动后显示"
           />
-          <Trend
+          <MetricTrend
             title="热量差"
-            text={intake ? `今日 ${balance} kcal` : "完成饮食记录后显示"}
-            bars={[49, 43, 68, 54, 72, 47, 62]}
+            points={balanceTrend}
+            unit="kcal"
+            note="完成记录后显示"
           />
         </section>
       )}
@@ -1077,6 +1208,99 @@ function Row({ name, cal }: { name: string; cal: string }) {
     </div>
   );
 }
+function BloodTrend({
+  days,
+  selectedDay,
+  onSelect,
+}: {
+  days: Array<TrendDay & { record?: BloodRecord }>;
+  selectedDay: string | null;
+  onSelect: (day: string) => void;
+}) {
+  const records = days.flatMap((day) => (day.record ? [day.record] : []));
+  const highest = Math.max(
+    1,
+    ...records.flatMap((record) => [record.systolic, record.diastolic]),
+  );
+  const height = (value: number) => `${Math.max(12, (value / highest) * 88)}%`;
+  return (
+    <section className="trend real-trend">
+      <div className="trend-heading">
+        <div>
+          <h2>血压趋势</h2>
+          <small>点击有记录的日期，查看血压和心率</small>
+        </div>
+        <span>收 / 舒</span>
+      </div>
+      <div className="blood-chart" role="list" aria-label="血压趋势">
+        {days.map((day) => (
+          <button
+            type="button"
+            key={day.key}
+            className={`blood-day ${day.record ? "has-record" : ""} ${selectedDay === day.key ? "selected" : ""}`}
+            onClick={() => day.record && onSelect(day.key)}
+            aria-label={
+              day.record
+                ? `${day.label}：${day.record.systolic}/${day.record.diastolic}，心率 ${day.record.heart_rate ?? "未记录"}`
+                : `${day.label}：未记录`
+            }
+          >
+            <span className="blood-bars">
+              {day.record && (
+                <>
+                  <i className="systolic" style={{ height: height(day.record.systolic) }} />
+                  <i className="diastolic" style={{ height: height(day.record.diastolic) }} />
+                </>
+              )}
+            </span>
+            <small>{day.label}</small>
+          </button>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function MetricTrend({
+  title,
+  points,
+  unit,
+  note,
+}: {
+  title: string;
+  points: MetricPoint[];
+  unit: string;
+  note: string;
+}) {
+  const scale = Math.max(1, ...points.map((point) => Math.abs(point.value)));
+  const latest = [...points].reverse().find((point) => point.hasValue);
+  return (
+    <section className="trend real-trend metric-trend">
+      <div className="trend-heading">
+        <div>
+          <h2>{title}</h2>
+          <small>{latest ? `最近记录 ${latest.value} ${unit}` : note}</small>
+        </div>
+      </div>
+      <div className="metric-chart" aria-label={title}>
+        {points.map((point) => (
+          <div className="metric-day" key={point.key}>
+            <i
+              className={point.value < 0 ? "negative" : ""}
+              style={{
+                height: point.hasValue
+                  ? `${Math.max(8, (Math.abs(point.value) / scale) * 86)}%`
+                  : "3%",
+              }}
+            />
+            <small>{point.label}</small>
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+}
+
 function Trend({
   title,
   text,
