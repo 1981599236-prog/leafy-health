@@ -1,92 +1,1100 @@
-'use client';
+"use client";
 
-import { ChangeEvent, useEffect, useMemo, useRef, useState } from 'react';
-import { cloudAuth, cloudDb } from '../lib/cloudbase';
+import { ChangeEvent, useEffect, useMemo, useRef, useState } from "react";
+import { cloudAuth, cloudDb } from "../lib/cloudbase";
 
-type View = 'home' | 'blood' | 'food' | 'exercise' | 'trend' | 'settings';
-type Profile = { display_name: string; gender: '男' | '女'; age: string; height_cm: string; weight_kg: string; activity_level: string; goal: string };
-type Exercise = { activity_type: string; duration_minutes: number; calories: number };
-type Blood = { systolic: string; diastolic: string };
+type View = "home" | "blood" | "food" | "exercise" | "trend" | "settings";
+type Profile = {
+  display_name: string;
+  gender: "男" | "女";
+  age: string;
+  height_cm: string;
+  weight_kg: string;
+  activity_level: string;
+  goal: string;
+};
+type Exercise = {
+  activity_type: string;
+  duration_minutes: number;
+  calories: number;
+};
+type Blood = { systolic: string; diastolic: string; heart_rate: string };
 type CloudUser = { id: string; username?: string };
-const emptyProfile: Profile = { display_name: '叶', gender: '女', age: '', height_cm: '', weight_kg: '', activity_level: '久坐', goal: '保持' };
-const exercises = [{ activity_type: '散步', emoji: '🚶', duration_minutes: 30, calories: 110 }, { activity_type: '跑步', emoji: '🏃', duration_minutes: 30, calories: 280 }, { activity_type: '力量训练', emoji: '🏋️', duration_minutes: 40, calories: 250 }, { activity_type: '骑车', emoji: '🚲', duration_minutes: 30, calories: 180 }];
+const emptyProfile: Profile = {
+  display_name: "叶",
+  gender: "女",
+  age: "",
+  height_cm: "",
+  weight_kg: "",
+  activity_level: "久坐",
+  goal: "保持",
+};
+const exercises = [
+  { activity_type: "散步", emoji: "🚶", duration_minutes: 30, calories: 110 },
+  { activity_type: "跑步", emoji: "🏃", duration_minutes: 30, calories: 280 },
+  {
+    activity_type: "力量训练",
+    emoji: "🏋️",
+    duration_minutes: 40,
+    calories: 250,
+  },
+  { activity_type: "骑车", emoji: "🚲", duration_minutes: 30, calories: 180 },
+];
 const formatDate = (value: string) => new Date(value).getDate();
 function errorMessage(error: unknown) {
   if (error instanceof Error) return error.message;
-  if (typeof error === 'string') return error;
-  if (error && typeof error === 'object') {
+  if (typeof error === "string") return error;
+  if (error && typeof error === "object") {
     const item = error as Record<string, unknown>;
-    const message = item.message ?? item.error_description ?? item.msg ?? item.code;
-    if (typeof message === 'string') return message;
+    const message =
+      item.message ?? item.error_description ?? item.msg ?? item.code;
+    if (typeof message === "string") return message;
   }
-  return '网络请求未完成，请稍后重试';
+  return "网络请求未完成，请稍后重试";
 }
-function currentUser(result: any): CloudUser | null { const user = result?.data?.session?.user ?? result?.data?.user ?? result?.session?.user ?? result?.user; const id = user?.id ?? user?.uid ?? user?.sub; return id ? { id, username: user.username } : null; }
+function currentUser(result: any): CloudUser | null {
+  const user =
+    result?.data?.session?.user ??
+    result?.data?.user ??
+    result?.session?.user ??
+    result?.user;
+  const id = user?.id ?? user?.uid ?? user?.sub;
+  return id ? { id, username: user.username } : null;
+}
 // 保留页面末尾的退出按钮写法；实际退出的是 CloudBase 会话。
-const supabase = { auth: { signOut: async () => { await cloudAuth.signOut(); window.location.reload(); } } };
+const supabase = {
+  auth: {
+    signOut: async () => {
+      await cloudAuth.signOut();
+      window.location.reload();
+    },
+  },
+};
 
-function Plant({ growth }: { growth: number }) { return <section className="plant"><div className="sun" /><div className="leaf l1" /><div className="leaf l2" />{growth >= 30 && <><div className="leaf l3" /><div className="leaf l4" /></>}{growth >= 60 && <div className="flower">✿</div>}<div className="stem" /><div className="pot" /><div className="plant-label"><b>{growth >= 90 ? '今天开花啦' : growth >= 60 ? '正在长新叶' : growth >= 30 ? '悄悄发芽中' : '从一条记录开始'}</b><span>今日成长值 {growth}/90</span></div></section>; }
-function Nav({ view, setView }: { view: View; setView: (v: View) => void }) { return <nav><button className={view === 'home' ? 'active' : ''} onClick={() => setView('home')}>⌂<span>今日</span></button><button className={view === 'trend' ? 'active' : ''} onClick={() => setView('trend')}>⌁<span>趋势</span></button><button className={view === 'settings' ? 'active' : ''} onClick={() => setView('settings')}>☼<span>我的</span></button></nav>; }
-function Back({ title, subtitle, go }: { title: string; subtitle: string; go: () => void }) { return <header className="back"><button onClick={go}>‹</button><div><h1>{title}</h1><p>{subtitle}</p></div></header>; }
+function Plant({ growth }: { growth: number }) {
+  return (
+    <section className="plant">
+      <div className="sun" />
+      <div className="leaf l1" />
+      <div className="leaf l2" />
+      {growth >= 30 && (
+        <>
+          <div className="leaf l3" />
+          <div className="leaf l4" />
+        </>
+      )}
+      {growth >= 60 && <div className="flower">✿</div>}
+      <div className="stem" />
+      <div className="pot" />
+      <div className="plant-label">
+        <b>
+          {growth >= 90
+            ? "今天开花啦"
+            : growth >= 60
+              ? "正在长新叶"
+              : growth >= 30
+                ? "悄悄发芽中"
+                : "从一条记录开始"}
+        </b>
+        <span>今日成长值 {growth}/90</span>
+      </div>
+    </section>
+  );
+}
+function Nav({ view, setView }: { view: View; setView: (v: View) => void }) {
+  return (
+    <nav>
+      <button
+        className={view === "home" ? "active" : ""}
+        onClick={() => setView("home")}
+      >
+        ⌂<span>今日</span>
+      </button>
+      <button
+        className={view === "trend" ? "active" : ""}
+        onClick={() => setView("trend")}
+      >
+        ⌁<span>趋势</span>
+      </button>
+      <button
+        className={view === "settings" ? "active" : ""}
+        onClick={() => setView("settings")}
+      >
+        ☼<span>我的</span>
+      </button>
+    </nav>
+  );
+}
+function Back({
+  title,
+  subtitle,
+  go,
+}: {
+  title: string;
+  subtitle: string;
+  go: () => void;
+}) {
+  return (
+    <header className="back">
+      <button onClick={go}>‹</button>
+      <div>
+        <h1>{title}</h1>
+        <p>{subtitle}</p>
+      </div>
+    </header>
+  );
+}
 
 export default function Page() {
-  const [user, setUser] = useState<CloudUser | null>(null), [ready, setReady] = useState(false), [username, setUsername] = useState(''), [password, setPassword] = useState(''), [email, setEmail] = useState(''), [verificationCode, setVerificationCode] = useState(''), [verification, setVerification] = useState<any>(null), [creatingAccount, setCreatingAccount] = useState(false), [loggingIn, setLoggingIn] = useState(false), [profileId, setProfileId] = useState('');
-  const [profile, setProfile] = useState<Profile | null>(null), [draft, setDraft] = useState<Profile>(emptyProfile), [view, setView] = useState<View>('home'), [dataReady, setDataReady] = useState(false);
-  const [blood, setBlood] = useState<Blood>({ systolic: '', diastolic: '' }), [bloodDone, setBloodDone] = useState(false);
-  const [intake, setIntake] = useState(0), [exerciseTotal, setExerciseTotal] = useState(0), [latestExercise, setLatestExercise] = useState<Exercise | null>(null);
-  const [checked, setChecked] = useState<Set<number>>(new Set()), [foodStage, setFoodStage] = useState<'upload' | 'result'>('upload'), [toast, setToast] = useState(''), [model, setModel] = useState('Gemini Flash');
-  const savedBlood = useRef('');
-  const now = new Date(); const dayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate()).toISOString(); const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
-  const bmr = useMemo(() => { const age = Number(profile?.age || 28), h = Number(profile?.height_cm || 165), w = Number(profile?.weight_kg || 58); const basic = 10 * w + 6.25 * h - 5 * age + (profile?.gender === '男' ? 5 : -161); return Math.round(basic * (profile?.activity_level === '经常运动' ? 1.55 : profile?.activity_level === '轻度活动' ? 1.35 : 1.2)); }, [profile]);
-  const growth = (bloodDone ? 30 : 0) + (intake > 0 ? 30 : 0) + (exerciseTotal > 0 ? 30 : 0); const totalOut = bmr + exerciseTotal; const balance = intake - totalOut;
-  const days = Array.from({ length: new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate() }, (_, i) => i + 1); const blanks = new Date(now.getFullYear(), now.getMonth(), 1).getDay();
+  const [user, setUser] = useState<CloudUser | null>(null),
+    [ready, setReady] = useState(false),
+    [username, setUsername] = useState(""),
+    [password, setPassword] = useState(""),
+    [email, setEmail] = useState(""),
+    [verificationCode, setVerificationCode] = useState(""),
+    [verification, setVerification] = useState<any>(null),
+    [creatingAccount, setCreatingAccount] = useState(false),
+    [loggingIn, setLoggingIn] = useState(false),
+    [profileId, setProfileId] = useState("");
+  const [profile, setProfile] = useState<Profile | null>(null),
+    [draft, setDraft] = useState<Profile>(emptyProfile),
+    [view, setView] = useState<View>("home"),
+    [dataReady, setDataReady] = useState(false);
+  const [blood, setBlood] = useState<Blood>({
+      systolic: "",
+      diastolic: "",
+      heart_rate: "",
+    }),
+    [bloodDone, setBloodDone] = useState(false);
+  const [intake, setIntake] = useState(0),
+    [exerciseTotal, setExerciseTotal] = useState(0),
+    [latestExercise, setLatestExercise] = useState<Exercise | null>(null);
+  const [checked, setChecked] = useState<Set<number>>(new Set()),
+    [foodStage, setFoodStage] = useState<"upload" | "result">("upload"),
+    [toast, setToast] = useState(""),
+    [model, setModel] = useState("Gemini Flash");
+  const savedBlood = useRef("");
+  const now = new Date();
+  const dayStart = new Date(
+    now.getFullYear(),
+    now.getMonth(),
+    now.getDate(),
+  ).toISOString();
+  const monthStart = new Date(
+    now.getFullYear(),
+    now.getMonth(),
+    1,
+  ).toISOString();
+  const bmr = useMemo(() => {
+    const age = Number(profile?.age || 28),
+      h = Number(profile?.height_cm || 165),
+      w = Number(profile?.weight_kg || 58);
+    const basic =
+      10 * w + 6.25 * h - 5 * age + (profile?.gender === "男" ? 5 : -161);
+    return Math.round(
+      basic *
+        (profile?.activity_level === "经常运动"
+          ? 1.55
+          : profile?.activity_level === "轻度活动"
+            ? 1.35
+            : 1.2),
+    );
+  }, [profile]);
+  const growth =
+    (bloodDone ? 30 : 0) + (intake > 0 ? 30 : 0) + (exerciseTotal > 0 ? 30 : 0);
+  const totalOut = bmr + exerciseTotal;
+  const balance = intake - totalOut;
+  const days = Array.from(
+    { length: new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate() },
+    (_, i) => i + 1,
+  );
+  const blanks = new Date(now.getFullYear(), now.getMonth(), 1).getDay();
 
-  useEffect(() => { let active = true; cloudAuth.getSession().then((result: any) => { if (active) setUser(currentUser(result)); }).catch(() => {}).finally(() => { if (active) setReady(true); }); return () => { active = false; }; }, []);
-  useEffect(() => { if (user) { setDataReady(false); void loadData().finally(() => setDataReady(true)); } else { setDataReady(false); setProfile(null); setBlood({ systolic: '', diastolic: '' }); setIntake(0); setExerciseTotal(0); setChecked(new Set()); } }, [user]);
-  useEffect(() => { if (!toast) return; const t = window.setTimeout(() => setToast(''), 2400); return () => window.clearTimeout(t); }, [toast]);
+  useEffect(() => {
+    let active = true;
+    cloudAuth
+      .getSession()
+      .then((result: any) => {
+        if (active) setUser(currentUser(result));
+      })
+      .catch(() => {})
+      .finally(() => {
+        if (active) setReady(true);
+      });
+    return () => {
+      active = false;
+    };
+  }, []);
+  useEffect(() => {
+    if (user) {
+      setDataReady(false);
+      void loadData().finally(() => setDataReady(true));
+    } else {
+      setDataReady(false);
+      setProfile(null);
+      setBlood({ systolic: "", diastolic: "", heart_rate: "" });
+      setIntake(0);
+      setExerciseTotal(0);
+      setChecked(new Set());
+    }
+  }, [user]);
+  useEffect(() => {
+    if (!toast) return;
+    const t = window.setTimeout(() => setToast(""), 2400);
+    return () => window.clearTimeout(t);
+  }, [toast]);
 
   async function loadData() {
     if (!user) return;
     try {
-        // 集合已设为“读取和修改本人数据”，CloudBase 会在服务端按当前登录用户
-        // 自动筛选记录；不额外按 _openid 查询，以兼容邮箱账号的 uid 身份。
-        const own = (collection: string) => cloudDb.collection(collection).get();
-      const [profileRes, bpRes, foodRes, exerciseRes] = await Promise.all([own('health_profiles'), own('health_blood'), own('health_food'), own('health_exercise')]);
-        const p = [...(profileRes.data ?? [])].sort((a: any, b: any) => String(b.updatedAt ?? '').localeCompare(String(a.updatedAt ?? '')))[0];
-      if (p) { setProfileId(p._id); setProfile({ display_name: p.display_name, gender: p.gender, age: String(p.age), height_cm: String(p.height_cm), weight_kg: String(p.weight_kg), activity_level: p.activity_level, goal: p.goal }); }
-      const bpRows = (bpRes.data ?? []) as any[]; const foodRows = (foodRes.data ?? []) as any[]; const exerciseRows = (exerciseRes.data ?? []) as any[];
-      const todayBp = bpRows.find(item => item.createdAt >= dayStart); if (todayBp) { const key = `${todayBp.systolic}/${todayBp.diastolic}`; savedBlood.current = key; setBlood({ systolic: String(todayBp.systolic), diastolic: String(todayBp.diastolic) }); setBloodDone(true); } else { setBloodDone(false); }
-      const todayFood = foodRows.filter(item => item.createdAt >= dayStart); setIntake(todayFood.reduce((sum, item) => sum + item.calories, 0)); const dayExercise = exerciseRows.filter(item => item.createdAt >= dayStart); setExerciseTotal(dayExercise.reduce((sum, item) => sum + item.calories, 0)); if (dayExercise[0]) setLatestExercise(dayExercise[0]);
-      const checkedDays = new Set<number>(); [...bpRows, ...foodRows, ...exerciseRows].forEach(item => checkedDays.add(formatDate(item.createdAt))); setChecked(checkedDays);
-    } catch (error) { setToast(`暂时无法读取记录：${errorMessage(error)}`); }
+      // 集合已设为“读取和修改本人数据”，CloudBase 会在服务端按当前登录用户
+      // 自动筛选记录；不额外按 _openid 查询，以兼容邮箱账号的 uid 身份。
+      const own = (collection: string) => cloudDb.collection(collection).get();
+      const [profileRes, bpRes, foodRes, exerciseRes] = await Promise.all([
+        own("health_profiles"),
+        own("health_blood"),
+        own("health_food"),
+        own("health_exercise"),
+      ]);
+      const p = [...(profileRes.data ?? [])].sort((a: any, b: any) =>
+        String(b.updatedAt ?? "").localeCompare(String(a.updatedAt ?? "")),
+      )[0];
+      if (p) {
+        setProfileId(p._id);
+        setProfile({
+          display_name: p.display_name,
+          gender: p.gender,
+          age: String(p.age),
+          height_cm: String(p.height_cm),
+          weight_kg: String(p.weight_kg),
+          activity_level: p.activity_level,
+          goal: p.goal,
+        });
+      }
+      const bpRows = (bpRes.data ?? []) as any[];
+      const foodRows = (foodRes.data ?? []) as any[];
+      const exerciseRows = (exerciseRes.data ?? []) as any[];
+      const todayBp = bpRows.find((item) => item.createdAt >= dayStart);
+      if (todayBp) {
+        const key = `${todayBp.systolic}/${todayBp.diastolic}/${todayBp.heart_rate ?? ""}`;
+        savedBlood.current = key;
+        setBlood({
+          systolic: String(todayBp.systolic),
+          diastolic: String(todayBp.diastolic),
+          heart_rate:
+            todayBp.heart_rate == null ? "" : String(todayBp.heart_rate),
+        });
+        setBloodDone(true);
+      } else {
+        setBloodDone(false);
+      }
+      const todayFood = foodRows.filter((item) => item.createdAt >= dayStart);
+      setIntake(todayFood.reduce((sum, item) => sum + item.calories, 0));
+      const dayExercise = exerciseRows.filter(
+        (item) => item.createdAt >= dayStart,
+      );
+      setExerciseTotal(
+        dayExercise.reduce((sum, item) => sum + item.calories, 0),
+      );
+      if (dayExercise[0]) setLatestExercise(dayExercise[0]);
+      const checkedDays = new Set<number>();
+      [...bpRows, ...foodRows, ...exerciseRows].forEach((item) =>
+        checkedDays.add(formatDate(item.createdAt)),
+      );
+      setChecked(checkedDays);
+    } catch (error) {
+      setToast(`暂时无法读取记录：${errorMessage(error)}`);
+    }
   }
-  async function signIn() { if (!username.trim() || password.length < 8) return setToast('请输入用户名和至少 8 位密码'); setLoggingIn(true); try { const result = await cloudAuth.signInWithPassword({ username: username.trim(), password }); if (result?.error) throw result.error; const nextUser = currentUser(result) ?? currentUser(await cloudAuth.getSession()); if (!nextUser) throw new Error('登录未完成，请稍后重试'); setUser(nextUser); setPassword(''); } catch (error) { setToast(`登录失败：${errorMessage(error)}`); } finally { setLoggingIn(false); } }
-  async function sendVerification() { if (!email.trim()) return setToast('请先输入你的邮箱'); setLoggingIn(true); try { const result = await cloudAuth.getVerification({ email: email.trim() }); if (result?.error) throw result.error; const data = result?.data ?? result; if (!data?.verification_id) throw new Error('验证码暂时无法发送'); setVerification(data); setToast('验证码已发送，请查看邮箱'); } catch (error) { setToast(`发送失败：${errorMessage(error)}`); } finally { setLoggingIn(false); } }
-  async function createAccount() { if (!verification || !verificationCode || !username.trim() || password.length < 8) return setToast('请补全邮箱验证码、用户名和至少 8 位密码'); setLoggingIn(true); try { const verified = await cloudAuth.verify({ verification_id: verification.verification_id, verification_code: verificationCode }); if (verified?.error) throw verified.error; const verificationToken = (verified?.data ?? verified)?.verification_token; if (!verificationToken) throw new Error('验证码校验未完成'); const result = await cloudAuth.signUp({ email: email.trim(), verification_code: verificationCode, verification_token: verificationToken, username: username.trim(), password }); if (result?.error) throw result.error; const nextUser = currentUser(result) ?? currentUser(await cloudAuth.getSession()); if (!nextUser) throw new Error('账号已创建，请切换到登录后进入'); setUser(nextUser); setPassword(''); } catch (error) { setToast(`创建账号失败：${errorMessage(error)}`); } finally { setLoggingIn(false); } }
-    async function saveProfile() { if (!user || !draft.age || !draft.height_cm || !draft.weight_kg) return setToast('请补全年龄、身高和体重'); const row = { display_name: draft.display_name.trim() || '叶', gender: draft.gender, age: Number(draft.age), height_cm: Number(draft.height_cm), weight_kg: Number(draft.weight_kg), activity_level: draft.activity_level, goal: draft.goal, updatedAt: new Date().toISOString() }; try { if (profileId) await cloudDb.collection('health_profiles').doc(profileId).update(row); else { const result = await cloudDb.collection('health_profiles').add(row); setProfileId(result._id ?? result.id ?? result.ids?.[0] ?? ''); } setProfile({ ...draft, display_name: row.display_name }); setToast('档案已保存'); } catch (error) { setToast(`保存失败：${errorMessage(error)}`); } }
-  async function saveBlood() { if (!user || !blood.systolic || !blood.diastolic) return; const key = `${blood.systolic}/${blood.diastolic}`; if (savedBlood.current === key) return; savedBlood.current = key; try { await cloudDb.collection('health_blood').add({ systolic: Number(blood.systolic), diastolic: Number(blood.diastolic), createdAt: new Date().toISOString() }); setBloodDone(true); setChecked(current => new Set(current).add(now.getDate())); setToast('血压已记录，小叶子长高一点'); } catch (error) { savedBlood.current = ''; setToast(`保存失败：${errorMessage(error)}`); } }
-  async function saveFood() { if (!user) return; try { await cloudDb.collection('health_food').add({ items: [{ name: '鸡蛋', quantity: '1 个' }, { name: '面包', quantity: '2 片' }, { name: '牛奶', quantity: '1 杯' }], calories: 550, protein_g: 25, carbs_g: 60, fat_g: 18, createdAt: new Date().toISOString() }); setIntake(x => x + 550); setChecked(current => new Set(current).add(now.getDate())); setFoodStage('upload'); setView('home'); setToast('饮食已记录，成长值 +30'); } catch (error) { setToast(`保存失败：${errorMessage(error)}`); } }
-  async function saveExercise(item: typeof exercises[number]) { if (!user) return; try { await cloudDb.collection('health_exercise').add({ activity_type: item.activity_type, duration_minutes: item.duration_minutes, calories: item.calories, createdAt: new Date().toISOString() }); setLatestExercise(item); setExerciseTotal(x => x + item.calories); setChecked(current => new Set(current).add(now.getDate())); setToast(`${item.activity_type} 已记录，成长值 +30`); } catch (error) { setToast(`保存失败：${errorMessage(error)}`); } }
-  function foodFile(e: ChangeEvent<HTMLInputElement>) { if (e.target.files?.[0]) { setToast('AI 正在整理这餐…'); window.setTimeout(() => setFoodStage('result'), 700); } }
-  if (!ready) return <main className="shell loading">正在准备你的健康记录…</main>;
-  if (!user) return <main className="shell login"><div className="seed">🌱</div><p>{creatingAccount ? '先确认是你本人' : '欢迎来到 一叶'}</p><h1>每天，照顾<br />一下自己。</h1>{creatingAccount && <><label>邮箱地址<input type="email" autoComplete="email" placeholder="name@example.com" value={email} onChange={e => setEmail(e.target.value)} /></label>{verification && <label>邮箱验证码<input inputMode="numeric" placeholder="请输入邮件中的验证码" value={verificationCode} onChange={e => setVerificationCode(e.target.value)} /></label>}<button className="primary" disabled={loggingIn || !email.trim()} onClick={sendVerification}>{loggingIn ? '请稍等…' : verification ? '重新发送验证码' : '发送邮箱验证码'}</button></>}<label>用户名<input autoComplete="username" placeholder="例如 leafy2026" value={username} onChange={e => setUsername(e.target.value)} /></label><label>密码<input type="password" autoComplete={creatingAccount ? 'new-password' : 'current-password'} placeholder="至少 8 位，建议含字母、数字和符号" value={password} onChange={e => setPassword(e.target.value)} /></label><button className="primary" disabled={loggingIn || !username.trim() || password.length < 8 || (creatingAccount && (!verification || !verificationCode))} onClick={creatingAccount ? createAccount : signIn}>{loggingIn ? '请稍等…' : creatingAccount ? '确认并创建账号 →' : '进入我的记录 →'}</button><button className="auth-switch" onClick={() => { setCreatingAccount(value => !value); setPassword(''); setVerification(null); setVerificationCode(''); }}>{creatingAccount ? '已有账号？直接登录' : '第一次使用？创建账号'}</button><small>{creatingAccount ? '邮箱验证码只在第一次创建账号时使用。' : '你的记录只属于当前账号。'}</small>{toast && <div className="toast">{toast}</div>}</main>;
-  if (!dataReady) return <main className="shell loading">正在同步你的健康记录…</main>;
-  if (!profile) return <main className="shell onboarding"><div className="seed">🌱</div><p>先认识一下你的身体</p><h1>只需一分钟</h1><span className="intro">这些信息只用于估算每日消耗，不作医疗判断。</span><label>显示文字<input maxLength={2} value={draft.display_name} onChange={e => setDraft({ ...draft, display_name: e.target.value })} /></label><div className="two"><label>年龄<input inputMode="numeric" value={draft.age} onChange={e => setDraft({ ...draft, age: e.target.value })} placeholder="28" /></label><label>身高<input inputMode="numeric" value={draft.height_cm} onChange={e => setDraft({ ...draft, height_cm: e.target.value })} placeholder="165 cm" /></label></div><label>体重<input inputMode="decimal" value={draft.weight_kg} onChange={e => setDraft({ ...draft, weight_kg: e.target.value })} placeholder="58 kg" /></label><Choices value={draft.gender} values={['女', '男']} change={gender => setDraft({ ...draft, gender: gender as '男' | '女' })} /><Choices value={draft.activity_level} values={['久坐', '轻度活动', '经常运动']} change={activity_level => setDraft({ ...draft, activity_level })} /><Choices value={draft.goal} values={['减脂', '保持', '增肌']} change={goal => setDraft({ ...draft, goal })} /><button className="primary" onClick={saveProfile}>开始记录 →</button>{toast && <div className="toast">{toast}</div>}</main>;
-  const name = profile.display_name || '叶';
-  return <main className="shell app">
-    {view === 'home' && <section className="page"><header className="homehead"><div><p>{new Intl.DateTimeFormat('zh-CN', { month: 'long', day: 'numeric', weekday: 'short' }).format(now)}</p><h1>早上好 🌱</h1><span>今天也照顾一下自己。</span></div><button className="avatar" onClick={() => setView('settings')}>{name}</button></header><Plant growth={growth} /><h2 className="sectiontitle">今天，做这三件小事 <i>{growth}/90</i></h2><Action emoji="🩺" title={bloodDone ? '血压已记录' : '记录血压'} detail={bloodDone ? `${blood.systolic} / ${blood.diastolic} mmHg` : '花 10 秒，了解此刻的自己'} done={bloodDone} click={() => setView('blood')} /><Action emoji="🍱" title={intake ? '饮食已记录' : '记录饮食'} detail={intake ? `今日已摄入 ${intake} kcal` : '拍张照，剩下交给 AI'} done={intake > 0} click={() => setView('food')} /><Action emoji="🏃" title={exerciseTotal ? '运动已记录' : '记录运动'} detail={latestExercise ? `${latestExercise.activity_type} · 今日 ${exerciseTotal} kcal` : '动一动，也给自己一个赞'} done={exerciseTotal > 0} click={() => setView('exercise')} /><section className="energy"><h2>今日能量 <i>{intake ? (balance < 0 ? '🔥 消耗中' : '⚖️ 接近平衡') : '等待记录'}</i></h2><div><Stat label="摄入" value={intake || '—'} /><Stat label="消耗" value={totalOut} /><Stat label="热量差" value={intake ? balance : '—'} /></div></section><Calendar checked={checked} days={days} blanks={blanks} month={now.getMonth() + 1} today={now.getDate()} /></section>}
-    {view === 'blood' && <section className="page"><Back title="记录血压" subtitle="输入后自动保存" go={() => setView('home')} /><div className="card bp"><label>收缩压<input autoFocus inputMode="numeric" placeholder="120" value={blood.systolic} onChange={e => setBlood({ ...blood, systolic: e.target.value })} onBlur={saveBlood} /><small>mmHg</small></label><b>/</b><label>舒张压<input inputMode="numeric" placeholder="80" value={blood.diastolic} onChange={e => setBlood({ ...blood, diastolic: e.target.value })} onBlur={saveBlood} /><small>mmHg</small></label></div>{bloodDone && <div className="reference"><b>你的血压　{blood.systolic} / {blood.diastolic}</b><span>参考值 120 / 80　收缩压 {Number(blood.systolic) >= 120 ? '↑' : '↓'}{Math.abs(Number(blood.systolic) - 120)}　舒张压 {Number(blood.diastolic) >= 80 ? '↑' : '↓'}{Math.abs(Number(blood.diastolic) - 80)}</span></div>}<p className="helper">不做判断，只为你留下一份温和的日常参考。</p></section>}
-    {view === 'food' && <section className="page"><Back title="记录饮食" subtitle="拍张照，AI 帮你整理" go={() => setView('home')} />{foodStage === 'upload' ? <label className="upload">⌁<b>拍照或上传餐食照片</b><span>支持从相册选择</span><input type="file" accept="image/*" onChange={foodFile} /></label> : <div className="foodresult"><div className="foodemoji">🥚　🍞　🥛</div><p>AI 识别结果 <i>模拟 · {model}</i></p><Row name="鸡蛋" cal="70 kcal" /><Row name="面包" cal="240 kcal" /><Row name="牛奶" cal="240 kcal" /><div className="nutri">蛋白质 <b>25g</b><span>碳水 <b>60g</b></span><span>脂肪 <b>18g</b></span></div><h2>估算热量 <strong>550 kcal</strong></h2><button className="primary" onClick={saveFood}>确认记录 ✓</button></div>}</section>}
-    {view === 'exercise' && <section className="page"><Back title="记录运动" subtitle="选一个项目，立即完成记录" go={() => setView('home')} /><div className="exercisegrid">{exercises.map(item => <button key={item.activity_type} onClick={() => saveExercise(item)}><span>{item.emoji}</span><b>{item.activity_type}</b><small>{item.duration_minutes} 分钟 · {item.calories} kcal</small></button>)}</div><p className="helper center">点击即记录，之后随时可以回来继续添加。</p></section>}
-    {view === 'trend' && <section className="page"><header className="title"><p>慢慢看见你的变化</p><h1>健康趋势</h1></header><Trend title="血压趋势" text={bloodDone ? `最近一次 ${blood.systolic} / ${blood.diastolic}` : '记录一次血压，就从这里开始'} bars={[42, 60, 52, 69, 58, 73, 65]} /><Trend title="摄入热量" text={`今日已记录 ${intake} kcal`} bars={[45, 63, 52, 76, 48, 67, 58]} /><Trend title="运动消耗" text={`今日运动消耗 ${exerciseTotal} kcal`} bars={[28, 55, 36, 74, 40, 62, 51]} /><Trend title="热量差" text={intake ? `今日 ${balance} kcal` : '完成饮食记录后显示'} bars={[49, 43, 68, 54, 72, 47, 62]} /></section>}
-    {view === 'settings' && <section className="page"><header className="title"><p>留一点空间给自己</p><h1>我的</h1></header><div className="profilecard"><span className="avatar">{name}</span><div><b>{profile.gender} · {profile.age} 岁</b><small>{profile.height_cm} cm · {profile.weight_kg} kg · {profile.goal}</small></div><button onClick={() => { setDraft(profile); setProfile(null); }}>编辑</button></div><div className="card bmr"><span>每日基础消耗估算</span><strong>{bmr} <i>kcal / 天</i></strong><small>基于你的档案和日常活动计算</small></div><div className="card settings"><b>✦　AI 识别模型</b><small>当前：{model}</small>{['Gemini Flash', 'GPT-4o mini', '自定义 API'].map(item => <button key={item} onClick={() => { setModel(item); setToast(`已选择 ${item}`); }} className={model === item ? 'chosen' : ''}>{model === item ? '✓' : '○'}　{item}</button>)}<em>模型选择已保存于当前页面；AI 调用将在后续接入服务端密钥后启用。</em></div><button className="logout" onClick={() => supabase.auth.signOut()}>退出登录</button></section>}
-    <Nav view={view} setView={setView} />{toast && <div className="toast">{toast}</div>}
-  </main>;
+  async function signIn() {
+    if (!username.trim() || password.length < 8)
+      return setToast("请输入用户名和至少 8 位密码");
+    setLoggingIn(true);
+    try {
+      const result = await cloudAuth.signInWithPassword({
+        username: username.trim(),
+        password,
+      });
+      if (result?.error) throw result.error;
+      const nextUser =
+        currentUser(result) ?? currentUser(await cloudAuth.getSession());
+      if (!nextUser) throw new Error("登录未完成，请稍后重试");
+      setUser(nextUser);
+      setPassword("");
+    } catch (error) {
+      setToast(`登录失败：${errorMessage(error)}`);
+    } finally {
+      setLoggingIn(false);
+    }
+  }
+  async function sendVerification() {
+    if (!email.trim()) return setToast("请先输入你的邮箱");
+    setLoggingIn(true);
+    try {
+      const result = await cloudAuth.getVerification({ email: email.trim() });
+      if (result?.error) throw result.error;
+      const data = result?.data ?? result;
+      if (!data?.verification_id) throw new Error("验证码暂时无法发送");
+      setVerification(data);
+      setToast("验证码已发送，请查看邮箱");
+    } catch (error) {
+      setToast(`发送失败：${errorMessage(error)}`);
+    } finally {
+      setLoggingIn(false);
+    }
+  }
+  async function createAccount() {
+    if (
+      !verification ||
+      !verificationCode ||
+      !username.trim() ||
+      password.length < 8
+    )
+      return setToast("请补全邮箱验证码、用户名和至少 8 位密码");
+    setLoggingIn(true);
+    try {
+      const verified = await cloudAuth.verify({
+        verification_id: verification.verification_id,
+        verification_code: verificationCode,
+      });
+      if (verified?.error) throw verified.error;
+      const verificationToken = (verified?.data ?? verified)
+        ?.verification_token;
+      if (!verificationToken) throw new Error("验证码校验未完成");
+      const result = await cloudAuth.signUp({
+        email: email.trim(),
+        verification_code: verificationCode,
+        verification_token: verificationToken,
+        username: username.trim(),
+        password,
+      });
+      if (result?.error) throw result.error;
+      const nextUser =
+        currentUser(result) ?? currentUser(await cloudAuth.getSession());
+      if (!nextUser) throw new Error("账号已创建，请切换到登录后进入");
+      setUser(nextUser);
+      setPassword("");
+    } catch (error) {
+      setToast(`创建账号失败：${errorMessage(error)}`);
+    } finally {
+      setLoggingIn(false);
+    }
+  }
+  async function saveProfile() {
+    if (!user || !draft.age || !draft.height_cm || !draft.weight_kg)
+      return setToast("请补全年龄、身高和体重");
+    const row = {
+      display_name: draft.display_name.trim() || "叶",
+      gender: draft.gender,
+      age: Number(draft.age),
+      height_cm: Number(draft.height_cm),
+      weight_kg: Number(draft.weight_kg),
+      activity_level: draft.activity_level,
+      goal: draft.goal,
+      updatedAt: new Date().toISOString(),
+    };
+    try {
+      if (profileId)
+        await cloudDb.collection("health_profiles").doc(profileId).update(row);
+      else {
+        const result = await cloudDb.collection("health_profiles").add(row);
+        setProfileId(result._id ?? result.id ?? result.ids?.[0] ?? "");
+      }
+      setProfile({ ...draft, display_name: row.display_name });
+      setToast("档案已保存");
+    } catch (error) {
+      setToast(`保存失败：${errorMessage(error)}`);
+    }
+  }
+  async function saveBlood() {
+    if (!user || !blood.systolic || !blood.diastolic || !blood.heart_rate)
+      return;
+    const key = `${blood.systolic}/${blood.diastolic}/${blood.heart_rate}`;
+    if (savedBlood.current === key) return;
+    savedBlood.current = key;
+    try {
+      await cloudDb
+        .collection("health_blood")
+        .add({
+          systolic: Number(blood.systolic),
+          diastolic: Number(blood.diastolic),
+          heart_rate: Number(blood.heart_rate),
+          createdAt: new Date().toISOString(),
+        });
+      setBloodDone(true);
+      setChecked((current) => new Set(current).add(now.getDate()));
+      setToast("血压和心率已记录，小叶子长高一点");
+    } catch (error) {
+      savedBlood.current = "";
+      setToast(`保存失败：${errorMessage(error)}`);
+    }
+  }
+  async function saveFood() {
+    if (!user) return;
+    try {
+      await cloudDb.collection("health_food").add({
+        items: [
+          { name: "鸡蛋", quantity: "1 个" },
+          { name: "面包", quantity: "2 片" },
+          { name: "牛奶", quantity: "1 杯" },
+        ],
+        calories: 550,
+        protein_g: 25,
+        carbs_g: 60,
+        fat_g: 18,
+        createdAt: new Date().toISOString(),
+      });
+      setIntake((x) => x + 550);
+      setChecked((current) => new Set(current).add(now.getDate()));
+      setFoodStage("upload");
+      setView("home");
+      setToast("饮食已记录，成长值 +30");
+    } catch (error) {
+      setToast(`保存失败：${errorMessage(error)}`);
+    }
+  }
+  async function saveExercise(item: (typeof exercises)[number]) {
+    if (!user) return;
+    try {
+      await cloudDb
+        .collection("health_exercise")
+        .add({
+          activity_type: item.activity_type,
+          duration_minutes: item.duration_minutes,
+          calories: item.calories,
+          createdAt: new Date().toISOString(),
+        });
+      setLatestExercise(item);
+      setExerciseTotal((x) => x + item.calories);
+      setChecked((current) => new Set(current).add(now.getDate()));
+      setToast(`${item.activity_type} 已记录，成长值 +30`);
+    } catch (error) {
+      setToast(`保存失败：${errorMessage(error)}`);
+    }
+  }
+  function foodFile(e: ChangeEvent<HTMLInputElement>) {
+    if (e.target.files?.[0]) {
+      setToast("AI 正在整理这餐…");
+      window.setTimeout(() => setFoodStage("result"), 700);
+    }
+  }
+  if (!ready)
+    return <main className="shell loading">正在准备你的健康记录…</main>;
+  if (!user)
+    return (
+      <main className="shell login">
+        <div className="seed">🌱</div>
+        <p>{creatingAccount ? "先确认是你本人" : "欢迎来到 一叶"}</p>
+        <h1>
+          每天，照顾
+          <br />
+          一下自己。
+        </h1>
+        {creatingAccount && (
+          <>
+            <label>
+              邮箱地址
+              <input
+                type="email"
+                autoComplete="email"
+                placeholder="name@example.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+              />
+            </label>
+            {verification && (
+              <label>
+                邮箱验证码
+                <input
+                  inputMode="numeric"
+                  placeholder="请输入邮件中的验证码"
+                  value={verificationCode}
+                  onChange={(e) => setVerificationCode(e.target.value)}
+                />
+              </label>
+            )}
+            <button
+              className="primary"
+              disabled={loggingIn || !email.trim()}
+              onClick={sendVerification}
+            >
+              {loggingIn
+                ? "请稍等…"
+                : verification
+                  ? "重新发送验证码"
+                  : "发送邮箱验证码"}
+            </button>
+          </>
+        )}
+        <label>
+          用户名
+          <input
+            autoComplete="username"
+            placeholder="例如 leafy2026"
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
+          />
+        </label>
+        <label>
+          密码
+          <input
+            type="password"
+            autoComplete={creatingAccount ? "new-password" : "current-password"}
+            placeholder="至少 8 位，建议含字母、数字和符号"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+          />
+        </label>
+        <button
+          className="primary"
+          disabled={
+            loggingIn ||
+            !username.trim() ||
+            password.length < 8 ||
+            (creatingAccount && (!verification || !verificationCode))
+          }
+          onClick={creatingAccount ? createAccount : signIn}
+        >
+          {loggingIn
+            ? "请稍等…"
+            : creatingAccount
+              ? "确认并创建账号 →"
+              : "进入我的记录 →"}
+        </button>
+        <button
+          className="auth-switch"
+          onClick={() => {
+            setCreatingAccount((value) => !value);
+            setPassword("");
+            setVerification(null);
+            setVerificationCode("");
+          }}
+        >
+          {creatingAccount ? "已有账号？直接登录" : "第一次使用？创建账号"}
+        </button>
+        <small>
+          {creatingAccount
+            ? "邮箱验证码只在第一次创建账号时使用。"
+            : "你的记录只属于当前账号。"}
+        </small>
+        {toast && <div className="toast">{toast}</div>}
+      </main>
+    );
+  if (!dataReady)
+    return <main className="shell loading">正在同步你的健康记录…</main>;
+  if (!profile)
+    return (
+      <main className="shell onboarding">
+        <div className="seed">🌱</div>
+        <p>先认识一下你的身体</p>
+        <h1>只需一分钟</h1>
+        <span className="intro">
+          这些信息只用于估算每日消耗，不作医疗判断。
+        </span>
+        <label>
+          显示文字
+          <input
+            maxLength={2}
+            value={draft.display_name}
+            onChange={(e) =>
+              setDraft({ ...draft, display_name: e.target.value })
+            }
+          />
+        </label>
+        <div className="two">
+          <label>
+            年龄
+            <input
+              inputMode="numeric"
+              value={draft.age}
+              onChange={(e) => setDraft({ ...draft, age: e.target.value })}
+              placeholder="28"
+            />
+          </label>
+          <label>
+            身高
+            <input
+              inputMode="numeric"
+              value={draft.height_cm}
+              onChange={(e) =>
+                setDraft({ ...draft, height_cm: e.target.value })
+              }
+              placeholder="165 cm"
+            />
+          </label>
+        </div>
+        <label>
+          体重
+          <input
+            inputMode="decimal"
+            value={draft.weight_kg}
+            onChange={(e) => setDraft({ ...draft, weight_kg: e.target.value })}
+            placeholder="58 kg"
+          />
+        </label>
+        <Choices
+          value={draft.gender}
+          values={["女", "男"]}
+          change={(gender) =>
+            setDraft({ ...draft, gender: gender as "男" | "女" })
+          }
+        />
+        <Choices
+          value={draft.activity_level}
+          values={["久坐", "轻度活动", "经常运动"]}
+          change={(activity_level) => setDraft({ ...draft, activity_level })}
+        />
+        <Choices
+          value={draft.goal}
+          values={["减脂", "保持", "增肌"]}
+          change={(goal) => setDraft({ ...draft, goal })}
+        />
+        <button className="primary" onClick={saveProfile}>
+          开始记录 →
+        </button>
+        {toast && <div className="toast">{toast}</div>}
+      </main>
+    );
+  const name = profile.display_name || "叶";
+  return (
+    <main className="shell app">
+      {view === "home" && (
+        <section className="page">
+          <header className="homehead">
+            <div>
+              <p>
+                {new Intl.DateTimeFormat("zh-CN", {
+                  month: "long",
+                  day: "numeric",
+                  weekday: "short",
+                }).format(now)}
+              </p>
+              <h1>早上好 🌱</h1>
+              <span>今天也照顾一下自己。</span>
+            </div>
+            <button className="avatar" onClick={() => setView("settings")}>
+              {name}
+            </button>
+          </header>
+          <Plant growth={growth} />
+          <h2 className="sectiontitle">
+            今天，做这三件小事 <i>{growth}/90</i>
+          </h2>
+          <Action
+            emoji="🩺"
+            title={bloodDone ? "血压已记录" : "记录血压"}
+            detail={
+              bloodDone
+                ? `${blood.systolic} / ${blood.diastolic}${blood.heart_rate ? ` · ${blood.heart_rate} bpm` : ""}`
+                : "花 10 秒，了解此刻的自己"
+            }
+            done={bloodDone}
+            click={() => setView("blood")}
+          />
+          <Action
+            emoji="🍱"
+            title={intake ? "饮食已记录" : "记录饮食"}
+            detail={
+              intake ? `今日已摄入 ${intake} kcal` : "拍张照，剩下交给 AI"
+            }
+            done={intake > 0}
+            click={() => setView("food")}
+          />
+          <Action
+            emoji="🏃"
+            title={exerciseTotal ? "运动已记录" : "记录运动"}
+            detail={
+              latestExercise
+                ? `${latestExercise.activity_type} · 今日 ${exerciseTotal} kcal`
+                : "动一动，也给自己一个赞"
+            }
+            done={exerciseTotal > 0}
+            click={() => setView("exercise")}
+          />
+          <section className="energy">
+            <h2>
+              今日能量{" "}
+              <i>
+                {intake
+                  ? balance < 0
+                    ? "🔥 消耗中"
+                    : "⚖️ 接近平衡"
+                  : "等待记录"}
+              </i>
+            </h2>
+            <div>
+              <Stat label="摄入" value={intake || "—"} />
+              <Stat label="消耗" value={totalOut} />
+              <Stat label="热量差" value={intake ? balance : "—"} />
+            </div>
+          </section>
+          <Calendar
+            checked={checked}
+            days={days}
+            blanks={blanks}
+            month={now.getMonth() + 1}
+            today={now.getDate()}
+          />
+        </section>
+      )}
+      {view === "blood" && (
+        <section className="page">
+          <Back
+            title="记录血压"
+            subtitle="输入后自动保存"
+            go={() => setView("home")}
+          />
+          <div className="card bp">
+            <label>
+              收缩压
+              <input
+                autoFocus
+                inputMode="numeric"
+                placeholder="120"
+                value={blood.systolic}
+                onChange={(e) =>
+                  setBlood({ ...blood, systolic: e.target.value })
+                }
+                onBlur={saveBlood}
+              />
+              <small>mmHg</small>
+            </label>
+            <b>/</b>
+            <label>
+              舒张压
+              <input
+                inputMode="numeric"
+                placeholder="80"
+                value={blood.diastolic}
+                onChange={(e) =>
+                  setBlood({ ...blood, diastolic: e.target.value })
+                }
+                onBlur={saveBlood}
+              />
+              <small>mmHg</small>
+            </label>
+            <label>
+              心率
+              <input
+                inputMode="numeric"
+                placeholder="72"
+                value={blood.heart_rate}
+                onChange={(e) =>
+                  setBlood({ ...blood, heart_rate: e.target.value })
+                }
+                onBlur={saveBlood}
+              />
+              <small>bpm</small>
+            </label>
+          </div>
+          {bloodDone && (
+            <div className="reference">
+              <b>
+                你的血压　{blood.systolic} / {blood.diastolic}
+              </b>
+              <span>心率：{blood.heart_rate ? `${blood.heart_rate} bpm` : "未记录"}</span>
+              <span>
+                参考值 120 / 80　收缩压{" "}
+                {Number(blood.systolic) >= 120 ? "↑" : "↓"}
+                {Math.abs(Number(blood.systolic) - 120)}　舒张压{" "}
+                {Number(blood.diastolic) >= 80 ? "↑" : "↓"}
+                {Math.abs(Number(blood.diastolic) - 80)}
+              </span>
+            </div>
+          )}
+          <p className="helper">不做判断，只为你留下一份温和的日常参考。</p>
+        </section>
+      )}
+      {view === "food" && (
+        <section className="page">
+          <Back
+            title="记录饮食"
+            subtitle="拍张照，AI 帮你整理"
+            go={() => setView("home")}
+          />
+          {foodStage === "upload" ? (
+            <label className="upload">
+              ⌁<b>拍照或上传餐食照片</b>
+              <span>支持从相册选择</span>
+              <input type="file" accept="image/*" onChange={foodFile} />
+            </label>
+          ) : (
+            <div className="foodresult">
+              <div className="foodemoji">🥚　🍞　🥛</div>
+              <p>
+                AI 识别结果 <i>模拟 · {model}</i>
+              </p>
+              <Row name="鸡蛋" cal="70 kcal" />
+              <Row name="面包" cal="240 kcal" />
+              <Row name="牛奶" cal="240 kcal" />
+              <div className="nutri">
+                蛋白质 <b>25g</b>
+                <span>
+                  碳水 <b>60g</b>
+                </span>
+                <span>
+                  脂肪 <b>18g</b>
+                </span>
+              </div>
+              <h2>
+                估算热量 <strong>550 kcal</strong>
+              </h2>
+              <button className="primary" onClick={saveFood}>
+                确认记录 ✓
+              </button>
+            </div>
+          )}
+        </section>
+      )}
+      {view === "exercise" && (
+        <section className="page">
+          <Back
+            title="记录运动"
+            subtitle="选一个项目，立即完成记录"
+            go={() => setView("home")}
+          />
+          <div className="exercisegrid">
+            {exercises.map((item) => (
+              <button
+                key={item.activity_type}
+                onClick={() => saveExercise(item)}
+              >
+                <span>{item.emoji}</span>
+                <b>{item.activity_type}</b>
+                <small>
+                  {item.duration_minutes} 分钟 · {item.calories} kcal
+                </small>
+              </button>
+            ))}
+          </div>
+          <p className="helper center">
+            点击即记录，之后随时可以回来继续添加。
+          </p>
+        </section>
+      )}
+      {view === "trend" && (
+        <section className="page">
+          <header className="title">
+            <p>慢慢看见你的变化</p>
+            <h1>健康趋势</h1>
+          </header>
+          <Trend
+            title="血压趋势"
+            text={
+              bloodDone
+                ? `最近一次 ${blood.systolic} / ${blood.diastolic}`
+                : "记录一次血压，就从这里开始"
+            }
+            bars={[42, 60, 52, 69, 58, 73, 65]}
+          />
+          <Trend
+            title="摄入热量"
+            text={`今日已记录 ${intake} kcal`}
+            bars={[45, 63, 52, 76, 48, 67, 58]}
+          />
+          <Trend
+            title="运动消耗"
+            text={`今日运动消耗 ${exerciseTotal} kcal`}
+            bars={[28, 55, 36, 74, 40, 62, 51]}
+          />
+          <Trend
+            title="热量差"
+            text={intake ? `今日 ${balance} kcal` : "完成饮食记录后显示"}
+            bars={[49, 43, 68, 54, 72, 47, 62]}
+          />
+        </section>
+      )}
+      {view === "settings" && (
+        <section className="page">
+          <header className="title">
+            <p>留一点空间给自己</p>
+            <h1>我的</h1>
+          </header>
+          <div className="profilecard">
+            <span className="avatar">{name}</span>
+            <div>
+              <b>
+                {profile.gender} · {profile.age} 岁
+              </b>
+              <small>
+                {profile.height_cm} cm · {profile.weight_kg} kg · {profile.goal}
+              </small>
+            </div>
+            <button
+              onClick={() => {
+                setDraft(profile);
+                setProfile(null);
+              }}
+            >
+              编辑
+            </button>
+          </div>
+          <div className="card bmr">
+            <span>每日基础消耗估算</span>
+            <strong>
+              {bmr} <i>kcal / 天</i>
+            </strong>
+            <small>基于你的档案和日常活动计算</small>
+          </div>
+          <div className="card settings">
+            <b>✦　AI 识别模型</b>
+            <small>当前：{model}</small>
+            {["Gemini Flash", "GPT-4o mini", "自定义 API"].map((item) => (
+              <button
+                key={item}
+                onClick={() => {
+                  setModel(item);
+                  setToast(`已选择 ${item}`);
+                }}
+                className={model === item ? "chosen" : ""}
+              >
+                {model === item ? "✓" : "○"}　{item}
+              </button>
+            ))}
+            <em>
+              模型选择已保存于当前页面；AI 调用将在后续接入服务端密钥后启用。
+            </em>
+          </div>
+          <button className="logout" onClick={() => supabase.auth.signOut()}>
+            退出登录
+          </button>
+        </section>
+      )}
+      <Nav view={view} setView={setView} />
+      {toast && <div className="toast">{toast}</div>}
+    </main>
+  );
 }
 
-function Choices({ value, values, change }: { value: string; values: string[]; change: (v: string) => void }) { return <div className="choices">{values.map(v => <button key={v} className={value === v ? 'chosen' : ''} onClick={() => change(v)}>{v}</button>)}</div>; }
-function Action({ emoji, title, detail, done, click }: { emoji: string; title: string; detail: string; done: boolean; click: () => void }) { return <button className="action" onClick={click}><span>{emoji}</span><div><b>{title}</b><small>{detail}</small></div><i>{done ? '✓' : '›'}</i></button>; }
-function Stat({ label, value }: { label: string; value: number | string }) { return <span><small>{label}</small><b>{value} <i>{value === '—' ? '' : 'kcal'}</i></b></span>; }
-function Calendar({ checked, days, blanks, month, today }: { checked: Set<number>; days: number[]; blanks: number; month: number; today: number }) { return <section className="calendar"><div><p>慢慢积累，就是成长</p><h2>{month} 月打卡</h2><strong>{checked.size}<i> 天</i></strong></div><small>✓ 已打卡　○ 未打卡</small><header>{['日', '一', '二', '三', '四', '五', '六'].map(d => <span key={d}>{d}</span>)}</header><main>{Array.from({ length: blanks }).map((_, i) => <i key={i} />)}{days.map(day => <b key={day} className={`${checked.has(day) ? 'checked' : ''} ${day > today ? 'future' : ''} ${day === today ? 'today' : ''}`}>{checked.has(day) ? '✓' : day}</b>)}</main><em>完成任意一项记录，即可点亮当天。</em></section>; }
-function Row({ name, cal }: { name: string; cal: string }) { return <div className="row"><span>{name}</span><b>{cal}</b></div>; }
-function Trend({ title, text, bars }: { title: string; text: string; bars: number[] }) { return <section className="trend"><h2>{title}</h2><div>{bars.map((h, i) => <i key={i} style={{ height: `${h}%` }} />)}</div><small>{text}</small></section>; }
+function Choices({
+  value,
+  values,
+  change,
+}: {
+  value: string;
+  values: string[];
+  change: (v: string) => void;
+}) {
+  return (
+    <div className="choices">
+      {values.map((v) => (
+        <button
+          key={v}
+          className={value === v ? "chosen" : ""}
+          onClick={() => change(v)}
+        >
+          {v}
+        </button>
+      ))}
+    </div>
+  );
+}
+function Action({
+  emoji,
+  title,
+  detail,
+  done,
+  click,
+}: {
+  emoji: string;
+  title: string;
+  detail: string;
+  done: boolean;
+  click: () => void;
+}) {
+  return (
+    <button className="action" onClick={click}>
+      <span>{emoji}</span>
+      <div>
+        <b>{title}</b>
+        <small>{detail}</small>
+      </div>
+      <i>{done ? "✓" : "›"}</i>
+    </button>
+  );
+}
+function Stat({ label, value }: { label: string; value: number | string }) {
+  return (
+    <span>
+      <small>{label}</small>
+      <b>
+        {value} <i>{value === "—" ? "" : "kcal"}</i>
+      </b>
+    </span>
+  );
+}
+function Calendar({
+  checked,
+  days,
+  blanks,
+  month,
+  today,
+}: {
+  checked: Set<number>;
+  days: number[];
+  blanks: number;
+  month: number;
+  today: number;
+}) {
+  return (
+    <section className="calendar">
+      <div>
+        <p>慢慢积累，就是成长</p>
+        <h2>{month} 月打卡</h2>
+        <strong>
+          {checked.size}
+          <i> 天</i>
+        </strong>
+      </div>
+      <small>✓ 已打卡　○ 未打卡</small>
+      <header>
+        {["日", "一", "二", "三", "四", "五", "六"].map((d) => (
+          <span key={d}>{d}</span>
+        ))}
+      </header>
+      <main>
+        {Array.from({ length: blanks }).map((_, i) => (
+          <i key={i} />
+        ))}
+        {days.map((day) => (
+          <b
+            key={day}
+            className={`${checked.has(day) ? "checked" : ""} ${day > today ? "future" : ""} ${day === today ? "today" : ""}`}
+          >
+            {checked.has(day) ? "✓" : day}
+          </b>
+        ))}
+      </main>
+      <em>完成任意一项记录，即可点亮当天。</em>
+    </section>
+  );
+}
+function Row({ name, cal }: { name: string; cal: string }) {
+  return (
+    <div className="row">
+      <span>{name}</span>
+      <b>{cal}</b>
+    </div>
+  );
+}
+function Trend({
+  title,
+  text,
+  bars,
+}: {
+  title: string;
+  text: string;
+  bars: number[];
+}) {
+  return (
+    <section className="trend">
+      <h2>{title}</h2>
+      <div>
+        {bars.map((h, i) => (
+          <i key={i} style={{ height: `${h}%` }} />
+        ))}
+      </div>
+      <small>{text}</small>
+    </section>
+  );
+}
