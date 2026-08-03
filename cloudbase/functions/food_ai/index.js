@@ -1,0 +1,150 @@
+const crypto = require("crypto");
+const cloudbase = require("@cloudbase/js-sdk");
+
+const app = cloudbase.init({
+  // CloudBase will provide TCB_ENV_ID in the function runtime. The fallback
+  // keeps a first manual deployment simple for this personal project.
+  env: process.env.TCB_ENV_ID || "leafy-health-d6g6dzt250e0fc4d5",
+});
+const db = app.database();
+const collection = "health_ai_configs";
+
+function currentUid() {
+  const { uid } = app.auth.getUserInfo();
+  if (!uid) throw new Error("请先登录后再使用 AI 设置");
+  return uid;
+}
+
+function encryptionKey() {
+  const secret = String(process.env.AI_CONFIG_ENCRYPTION_KEY || "");
+  if (secret.length < 20) {
+    throw new Error("AI 密钥保管尚未初始化，请配置至少 20 位的 AI_CONFIG_ENCRYPTION_KEY");
+  }
+  return crypto.createHash("sha256").update(secret).digest();
+}
+
+function encrypt(value) {
+  const iv = crypto.randomBytes(12);
+  const cipher = crypto.createCipheriv("aes-256-gcm", encryptionKey(), iv);
+  const encrypted = Buffer.concat([cipher.update(value, "utf8"), cipher.final()]);
+  return [iv, cipher.getAuthTag(), encrypted].map((part) => part.toString("base64")).join(".");
+}
+
+function decrypt(value) {
+  const [iv, tag, encrypted] = String(value).split(".").map((part) => Buffer.from(part, "base64"));
+  const decipher = crypto.createDecipheriv("aes-256-gcm", encryptionKey(), iv);
+  decipher.setAuthTag(tag);
+  return Buffer.concat([decipher.update(encrypted), decipher.final()]).toString("utf8");
+}
+
+function validateConfig(input) {
+  const providerName = String(input.providerName || "").trim();
+  const baseUrl = String(input.baseUrl || "").trim().replace(/\/+$/, "");
+  const modelName = String(input.modelName || "").trim();
+  if (!providerName || !baseUrl || !modelName) throw new Error("请填写服务商名称、API 链接和模型名称");
+  const parsed = new URL(baseUrl);
+  if (parsed.protocol !== "https:") throw new Error("API 链接必须使用 https://");
+  return { providerName, baseUrl, modelName };
+}
+
+async function getConfig(uid) {
+  const result = await db.collection(collection).where({ owner_uid: uid }).limit(1).get();
+  return result.data && result.data[0];
+}
+
+function publicConfig(config) {
+  if (!config) return { configured: false };
+  return {
+    configured: Boolean(config.encrypted_api_key),
+    providerName: config.provider_name,
+    baseUrl: config.base_url,
+    modelName: config.model_name,
+    keyHint: config.key_hint || "",
+    updatedAt: config.updated_at,
+  };
+}
+
+function cleanJson(content) {
+  const text = Array.isArray(content) ? content.map((part) => part.text || "").join("") : String(content || "");
+  return text.replace(/^```json\s*/i, "").replace(/```$/i, "").trim();
+}
+
+function normalizeAnalysis(data) {
+  const items = Array.isArray(data.items) ? data.items : [];
+  if (!items.length) throw new Error("AI 没有识别到食物，请换一张更清晰的照片");
+  const number = (value) => Math.max(0, Math.round(Number(value) || 0));
+  return {
+    items: items.slice(0, 12).map((item) => ({
+      name: String(item.name || "未命名食物"),
+      portion: String(item.portion || item.quantity || "估算一份"),
+      grams: number(item.grams || item.estimated_grams),
+      calories: number(item.calories),
+    })),
+    totalCalories: number(data.totalCalories || data.total_calories),
+    proteinG: number(data.proteinG || data.protein_g),
+    carbsG: number(data.carbsG || data.carbs_g),
+    fatG: number(data.fatG || data.fat_g),
+  };
+}
+
+async function recognize(config, imageDataUrl) {
+  if (!String(imageDataUrl || "").startsWith("data:image/")) throw new Error("请上传一张图片");
+  if (imageDataUrl.length > 4_000_000) throw new Error("图片过大，请重新拍摄或选择较小的照片");
+  const apiKey = decrypt(config.encrypted_api_key);
+  const endpoint = config.base_url.endsWith("/chat/completions")
+    ? config.base_url
+    : `${config.base_url}/chat/completions`;
+  const response = await fetch(endpoint, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", Authorization: `Bearer ${apiKey}` },
+    body: JSON.stringify({
+      model: config.model_name,
+      messages: [
+        {
+          role: "system",
+          content: "你是食物图片分析助手。只返回 JSON，不要 Markdown。格式：{items:[{name,portion,grams,calories}],totalCalories,proteinG,carbsG,fatG}。所有数值为估算；无法确定时给出最合理估计。",
+        },
+        {
+          role: "user",
+          content: [
+            { type: "text", text: "请识别这张餐食图片中的食物、估算份量、热量与营养素。" },
+            { type: "image_url", image_url: { url: imageDataUrl } },
+          ],
+        },
+      ],
+      temperature: 0.2,
+    }),
+  });
+  const body = await response.json().catch(() => ({}));
+  if (!response.ok) throw new Error(body.error?.message || body.message || `AI 请求失败（${response.status}）`);
+  return normalizeAnalysis(JSON.parse(cleanJson(body.choices?.[0]?.message?.content)));
+}
+
+exports.main = async (event) => {
+  const uid = currentUid();
+  if (event.action === "getConfig") return publicConfig(await getConfig(uid));
+  if (event.action === "saveConfig") {
+    const config = validateConfig(event);
+    const existing = await getConfig(uid);
+    const apiKey = String(event.apiKey || "").trim();
+    if (!apiKey && !existing?.encrypted_api_key) throw new Error("请首次填写 API Key");
+    const row = {
+      owner_uid: uid,
+      provider_name: config.providerName,
+      base_url: config.baseUrl,
+      model_name: config.modelName,
+      encrypted_api_key: apiKey ? encrypt(apiKey) : existing.encrypted_api_key,
+      key_hint: apiKey ? apiKey.slice(-4) : existing.key_hint,
+      updated_at: new Date().toISOString(),
+    };
+    if (existing?._id) await db.collection(collection).doc(existing._id).update(row);
+    else await db.collection(collection).add(row);
+    return publicConfig(row);
+  }
+  if (event.action === "recognize") {
+    const config = await getConfig(uid);
+    if (!config?.encrypted_api_key) throw new Error("请先在“我的”页面保存 AI 配置");
+    return recognize(config, event.imageDataUrl);
+  }
+  throw new Error("未知的 AI 操作");
+};

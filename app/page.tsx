@@ -1,7 +1,7 @@
 "use client";
 
 import { ChangeEvent, useEffect, useMemo, useRef, useState } from "react";
-import { cloudAuth, cloudDb } from "../lib/cloudbase";
+import { cloudApp, cloudAuth, cloudDb } from "../lib/cloudbase";
 
 type View = "home" | "blood" | "food" | "exercise" | "trend" | "settings";
 type Profile = {
@@ -28,6 +28,21 @@ type BloodRecord = {
 };
 type TrendDay = { key: string; label: string };
 type MetricPoint = TrendDay & { value: number; hasValue: boolean };
+type AiConfig = {
+  configured: boolean;
+  providerName: string;
+  baseUrl: string;
+  modelName: string;
+  apiKey: string;
+  keyHint: string;
+};
+type FoodAnalysis = {
+  items: { name: string; portion: string; grams: number; calories: number }[];
+  totalCalories: number;
+  proteinG: number;
+  carbsG: number;
+  fatG: number;
+};
 type CloudUser = { id: string; username?: string };
 const emptyProfile: Profile = {
   display_name: "叶",
@@ -37,6 +52,14 @@ const emptyProfile: Profile = {
   weight_kg: "",
   activity_level: "久坐",
   goal: "保持",
+};
+const emptyAiConfig: AiConfig = {
+  configured: false,
+  providerName: "",
+  baseUrl: "",
+  modelName: "",
+  apiKey: "",
+  keyHint: "",
 };
 const exercises = [
   { activity_type: "散步", emoji: "🚶", duration_minutes: 30, calories: 110 },
@@ -88,6 +111,30 @@ function currentUser(result: any): CloudUser | null {
     result?.user;
   const id = user?.id ?? user?.uid ?? user?.sub;
   return id ? { id, username: user.username } : null;
+}
+
+async function photoForAi(file: File) {
+  if (!file.type.startsWith("image/")) throw new Error("请选择一张图片");
+  const source = URL.createObjectURL(file);
+  try {
+    const image = await new Promise<HTMLImageElement>((resolve, reject) => {
+      const element = new Image();
+      element.onload = () => resolve(element);
+      element.onerror = () => reject(new Error("这张图片暂时无法读取，请换一张 JPG 或 PNG 图片"));
+      element.src = source;
+    });
+    const maxEdge = 1280;
+    const scale = Math.min(1, maxEdge / Math.max(image.width, image.height));
+    const canvas = document.createElement("canvas");
+    canvas.width = Math.max(1, Math.round(image.width * scale));
+    canvas.height = Math.max(1, Math.round(image.height * scale));
+    const context = canvas.getContext("2d");
+    if (!context) throw new Error("图片处理暂时不可用，请稍后再试");
+    context.drawImage(image, 0, 0, canvas.width, canvas.height);
+    return canvas.toDataURL("image/jpeg", 0.8);
+  } finally {
+    URL.revokeObjectURL(source);
+  }
 }
 // 保留页面末尾的退出按钮写法；实际退出的是 CloudBase 会话。
 const supabase = {
@@ -205,7 +252,11 @@ export default function Page() {
   const [checked, setChecked] = useState<Set<number>>(new Set()),
     [foodStage, setFoodStage] = useState<"upload" | "result">("upload"),
     [toast, setToast] = useState(""),
-    [model, setModel] = useState("Gemini Flash");
+    [foodAnalysis, setFoodAnalysis] = useState<FoodAnalysis | null>(null),
+    [isRecognizing, setIsRecognizing] = useState(false),
+    [aiConfig, setAiConfig] = useState<AiConfig>(emptyAiConfig),
+    [aiConfigLoading, setAiConfigLoading] = useState(false),
+    [aiConfigSaving, setAiConfigSaving] = useState(false);
   const savedBlood = useRef("");
   const now = new Date();
   const dayStart = new Date(
@@ -318,6 +369,9 @@ export default function Page() {
     const t = window.setTimeout(() => setToast(""), 2400);
     return () => window.clearTimeout(t);
   }, [toast]);
+  useEffect(() => {
+    if (user && view === "settings") void loadAiConfig();
+  }, [user, view]);
 
   async function loadData() {
     if (!user) return;
@@ -512,24 +566,76 @@ export default function Page() {
       setToast(`保存失败：${errorMessage(error)}`);
     }
   }
-  async function saveFood() {
+
+  async function callFoodAi(data: Record<string, unknown>) {
+    const result = await (cloudApp as any).callFunction({
+      name: "food_ai",
+      data,
+      parse: true,
+    });
+    const body = result?.result ?? result?.data ?? result;
+    if (body?.error) throw body.error;
+    return body;
+  }
+
+  async function loadAiConfig() {
     if (!user) return;
+    setAiConfigLoading(true);
+    try {
+      const result = await callFoodAi({ action: "getConfig" });
+      setAiConfig({
+        ...emptyAiConfig,
+        ...result,
+        apiKey: "",
+      });
+    } catch (error) {
+      setToast(`AI 设置暂时无法读取：${errorMessage(error)}`);
+    } finally {
+      setAiConfigLoading(false);
+    }
+  }
+
+  async function saveAiConfig() {
+    if (!aiConfig.providerName || !aiConfig.baseUrl || !aiConfig.modelName)
+      return setToast("请填完服务商名称、API 链接和模型名称");
+    setAiConfigSaving(true);
+    try {
+      const result = await callFoodAi({
+        action: "saveConfig",
+        providerName: aiConfig.providerName,
+        baseUrl: aiConfig.baseUrl,
+        modelName: aiConfig.modelName,
+        apiKey: aiConfig.apiKey,
+      });
+      setAiConfig({ ...emptyAiConfig, ...result, apiKey: "" });
+      setToast("AI 配置已安全保存，可以去拍照试试看了");
+    } catch (error) {
+      setToast(`AI 配置保存失败：${errorMessage(error)}`);
+    } finally {
+      setAiConfigSaving(false);
+    }
+  }
+
+  async function saveFood() {
+    if (!user || !foodAnalysis) return;
     try {
       await cloudDb.collection("health_food").add({
-        items: [
-          { name: "鸡蛋", quantity: "1 个" },
-          { name: "面包", quantity: "2 片" },
-          { name: "牛奶", quantity: "1 杯" },
-        ],
-        calories: 550,
-        protein_g: 25,
-        carbs_g: 60,
-        fat_g: 18,
+        items: foodAnalysis.items.map((item) => ({
+          name: item.name,
+          quantity: item.portion,
+          grams: item.grams,
+          calories: item.calories,
+        })),
+        calories: foodAnalysis.totalCalories,
+        protein_g: foodAnalysis.proteinG,
+        carbs_g: foodAnalysis.carbsG,
+        fat_g: foodAnalysis.fatG,
         createdAt: new Date().toISOString(),
       });
-      setIntake((x) => x + 550);
+      setIntake((x) => x + foodAnalysis.totalCalories);
       setChecked((current) => new Set(current).add(now.getDate()));
       setFoodStage("upload");
+      setFoodAnalysis(null);
       setView("home");
       setToast("饮食已记录，成长值 +30");
     } catch (error) {
@@ -555,10 +661,24 @@ export default function Page() {
       setToast(`保存失败：${errorMessage(error)}`);
     }
   }
-  function foodFile(e: ChangeEvent<HTMLInputElement>) {
-    if (e.target.files?.[0]) {
-      setToast("AI 正在整理这餐…");
-      window.setTimeout(() => setFoodStage("result"), 700);
+  async function foodFile(e: ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file) return;
+    if (!aiConfig.configured)
+      return setToast("请先到“我的”页面填好 AI 模型设置");
+    setIsRecognizing(true);
+    setToast("AI 正在识别这餐，请稍等…");
+    try {
+      const imageDataUrl = await photoForAi(file);
+      const result = await callFoodAi({ action: "recognize", imageDataUrl });
+      setFoodAnalysis(result as FoodAnalysis);
+      setFoodStage("result");
+      setToast("识别完成，确认后再记录");
+    } catch (error) {
+      setToast(`识别失败：${errorMessage(error)}`);
+    } finally {
+      setIsRecognizing(false);
     }
   }
   if (!ready)
@@ -898,35 +1018,51 @@ export default function Page() {
           {foodStage === "upload" ? (
             <label className="upload">
               ⌁<b>拍照或上传餐食照片</b>
-              <span>支持从相册选择</span>
-              <input type="file" accept="image/*" onChange={foodFile} />
+              <span>
+                {isRecognizing
+                  ? "正在识别，请稍等…"
+                  : aiConfig.configured
+                    ? `当前模型：${aiConfig.modelName}`
+                    : "先到“我的”里填写 AI 模型设置"}
+              </span>
+              <input
+                type="file"
+                accept="image/*"
+                capture="environment"
+                disabled={isRecognizing}
+                onChange={foodFile}
+              />
             </label>
-          ) : (
+          ) : foodAnalysis ? (
             <div className="foodresult">
-              <div className="foodemoji">🥚　🍞　🥛</div>
+              <div className="foodemoji">🍽️</div>
               <p>
-                AI 识别结果 <i>模拟 · {model}</i>
+                AI 识别结果 <i>{aiConfig.modelName}</i>
               </p>
-              <Row name="鸡蛋" cal="70 kcal" />
-              <Row name="面包" cal="240 kcal" />
-              <Row name="牛奶" cal="240 kcal" />
+              {foodAnalysis.items.map((item, index) => (
+                <Row
+                  key={`${item.name}-${index}`}
+                  name={`${item.name} · ${item.portion}`}
+                  cal={`${item.calories} kcal`}
+                />
+              ))}
               <div className="nutri">
-                蛋白质 <b>25g</b>
+                蛋白质 <b>{foodAnalysis.proteinG}g</b>
                 <span>
-                  碳水 <b>60g</b>
+                  碳水 <b>{foodAnalysis.carbsG}g</b>
                 </span>
                 <span>
-                  脂肪 <b>18g</b>
+                  脂肪 <b>{foodAnalysis.fatG}g</b>
                 </span>
               </div>
               <h2>
-                估算热量 <strong>550 kcal</strong>
+                估算热量 <strong>{foodAnalysis.totalCalories} kcal</strong>
               </h2>
               <button className="primary" onClick={saveFood}>
                 确认记录 ✓
               </button>
             </div>
-          )}
+          ) : null}
         </section>
       )}
       {view === "exercise" && (
@@ -1069,21 +1205,68 @@ export default function Page() {
           </div>
           <div className="card settings">
             <b>✦　AI 识别模型</b>
-            <small>当前：{model}</small>
-            {["Gemini Flash", "GPT-4o mini", "自定义 API"].map((item) => (
-              <button
-                key={item}
-                onClick={() => {
-                  setModel(item);
-                  setToast(`已选择 ${item}`);
-                }}
-                className={model === item ? "chosen" : ""}
-              >
-                {model === item ? "✓" : "○"}　{item}
-              </button>
-            ))}
+            <small>
+              {aiConfigLoading
+                ? "正在读取已保存的配置…"
+                : aiConfig.configured
+                  ? `已连接 · ${aiConfig.providerName} · 密钥末尾 ${aiConfig.keyHint}`
+                  : "尚未连接模型"}
+            </small>
+            <label>
+              服务商名称
+              <input
+                value={aiConfig.providerName}
+                placeholder="例如：硅基流动"
+                onChange={(event) =>
+                  setAiConfig((value) => ({
+                    ...value,
+                    providerName: event.target.value,
+                  }))
+                }
+              />
+            </label>
+            <label>
+              API 链接
+              <input
+                value={aiConfig.baseUrl}
+                placeholder="https://example.com/v1"
+                inputMode="url"
+                onChange={(event) =>
+                  setAiConfig((value) => ({ ...value, baseUrl: event.target.value }))
+                }
+              />
+            </label>
+            <label>
+              模型名称
+              <input
+                value={aiConfig.modelName}
+                placeholder="例如：model-name"
+                onChange={(event) =>
+                  setAiConfig((value) => ({ ...value, modelName: event.target.value }))
+                }
+              />
+            </label>
+            <label>
+              API Key
+              <input
+                type="password"
+                value={aiConfig.apiKey}
+                autoComplete="off"
+                placeholder={aiConfig.configured ? "留空＝保留当前 Key" : "首次保存时必填"}
+                onChange={(event) =>
+                  setAiConfig((value) => ({ ...value, apiKey: event.target.value }))
+                }
+              />
+            </label>
+            <button
+              className="ai-save"
+              disabled={aiConfigSaving || aiConfigLoading}
+              onClick={saveAiConfig}
+            >
+              {aiConfigSaving ? "正在安全保存…" : "保存 AI 设置"}
+            </button>
             <em>
-              模型选择已保存于当前页面；AI 调用将在后续接入服务端密钥后启用。
+              支持 OpenAI 兼容的图片识别接口。API Key 只会加密保存在腾讯云，网页不会显示它。
             </em>
           </div>
           <button className="logout" onClick={() => supabase.auth.signOut()}>

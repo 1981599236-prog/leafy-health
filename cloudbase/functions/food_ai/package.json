@@ -1,0 +1,8 @@
+{
+  "name": "leafy-health-food-ai",
+  "private": true,
+  "version": "1.0.0",
+  "dependencies": {
+    "@cloudbase/js-sdk": "^3.7.0"
+  }
+}
