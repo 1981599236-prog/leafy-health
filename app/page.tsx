@@ -43,6 +43,12 @@ type FoodAnalysis = {
   carbsG: number;
   fatG: number;
 };
+type FoodHistoryDay = {
+  key: string;
+  label: string;
+  totalCalories: number;
+  records: any[];
+};
 type CloudUser = { id: string; username?: string };
 const emptyProfile: Profile = {
   display_name: "叶",
@@ -257,7 +263,7 @@ export default function Page() {
     [exerciseTotal, setExerciseTotal] = useState(0),
     [latestExercise, setLatestExercise] = useState<Exercise | null>(null);
   const [checked, setChecked] = useState<Set<number>>(new Set()),
-    [foodStage, setFoodStage] = useState<"upload" | "result">("upload"),
+    [foodStage, setFoodStage] = useState<"upload" | "result" | "history">("upload"),
     [toast, setToast] = useState(""),
     [foodAnalysis, setFoodAnalysis] = useState<FoodAnalysis | null>(null),
     [isRecognizing, setIsRecognizing] = useState(false),
@@ -338,6 +344,30 @@ export default function Page() {
   const selectedBlood = bloodTrendDays.find(
     (day) => day.key === selectedTrendDay,
   );
+  const foodHistoryDays = useMemo<FoodHistoryDay[]>(() => {
+    const groups = new Map<string, FoodHistoryDay>();
+    [...foodHistory]
+      .sort((a, b) => String(b.createdAt).localeCompare(String(a.createdAt)))
+      .forEach((record) => {
+        const key = dayKey(record.createdAt);
+        const date = new Date(record.createdAt);
+        const label = date.toLocaleDateString("zh-CN", {
+          month: "long",
+          day: "numeric",
+          weekday: "short",
+        });
+        const group = groups.get(key) ?? {
+          key,
+          label,
+          totalCalories: 0,
+          records: [],
+        };
+        group.totalCalories += Number(record.calories ?? 0);
+        group.records.push(record);
+        groups.set(key, group);
+      });
+    return [...groups.values()];
+  }, [foodHistory]);
 
   useEffect(() => {
     let active = true;
@@ -626,7 +656,7 @@ export default function Page() {
   async function saveFood() {
     if (!user || !foodAnalysis) return;
     try {
-      await cloudDb.collection("health_food").add({
+      const record = {
         items: foodAnalysis.items.map((item) => ({
           name: item.name,
           quantity: item.portion,
@@ -638,7 +668,9 @@ export default function Page() {
         carbs_g: foodAnalysis.carbsG,
         fat_g: foodAnalysis.fatG,
         createdAt: new Date().toISOString(),
-      });
+      };
+      await cloudDb.collection("health_food").add(record);
+      setFoodHistory((history) => [record, ...history]);
       setIntake((x) => x + foodAnalysis.totalCalories);
       setChecked((current) => new Set(current).add(now.getDate()));
       setFoodStage("upload");
@@ -1034,26 +1066,42 @@ export default function Page() {
           <Back
             title="记录饮食"
             subtitle="拍张照，AI 帮你整理"
-            go={() => setView("home")}
+            go={() => {
+              setFoodStage("upload");
+              setFoodAnalysis(null);
+              setView("home");
+            }}
           />
           {foodStage === "upload" ? (
-            <label className="upload">
-              ⌁<b>拍照或上传餐食照片</b>
-              <span>
-                {isRecognizing
-                  ? "正在识别，请稍等…"
-                  : aiConfig.configured
-                    ? `当前模型：${aiConfig.modelName}`
-                    : "先到“我的”里填写 AI 模型设置"}
-              </span>
-              <input
-                type="file"
-                accept="image/*"
-                capture="environment"
-                disabled={isRecognizing}
-                onChange={foodFile}
-              />
-            </label>
+            <>
+              <label className="upload">
+                ⌁<b>拍照或上传餐食照片</b>
+                <span>
+                  {isRecognizing
+                    ? "正在识别，请稍等…"
+                    : aiConfig.configured
+                      ? `当前模型：${aiConfig.modelName}`
+                      : "先到“我的”里填写 AI 模型设置"}
+                </span>
+                <input
+                  type="file"
+                  accept="image/*"
+                  capture="environment"
+                  disabled={isRecognizing}
+                  onChange={foodFile}
+                />
+              </label>
+              <button
+                type="button"
+                className="food-history-link"
+                onClick={() => setFoodStage("history")}
+              >
+                <span>◷</span>
+                查看饮食记录
+                <small>{foodHistory.length} 条</small>
+                <i>›</i>
+              </button>
+            </>
           ) : foodAnalysis ? (
             <div className="foodresult">
               <div className="foodemoji">🍽️</div>
@@ -1082,8 +1130,66 @@ export default function Page() {
               <button className="primary" onClick={saveFood}>
                 确认记录 ✓
               </button>
+              <button
+                type="button"
+                className="secondary"
+                onClick={() => {
+                  setFoodAnalysis(null);
+                  setFoodStage("upload");
+                }}
+              >
+                重新拍摄
+              </button>
             </div>
-          ) : null}
+          ) : (
+            <section className="food-history">
+              <div className="food-history-head">
+                <div>
+                  <p>每一餐都会留在这里</p>
+                  <h2>饮食记录</h2>
+                </div>
+                <button type="button" onClick={() => setFoodStage("upload")}>
+                  去拍照
+                </button>
+              </div>
+              {foodHistoryDays.length ? (
+                foodHistoryDays.map((day) => (
+                  <section className="food-day" key={day.key}>
+                    <header>
+                      <span>{day.label}</span>
+                      <b>{day.totalCalories} kcal</b>
+                    </header>
+                    {day.records.map((record, index) => {
+                      const items = Array.isArray(record.items) ? record.items : [];
+                      const summary = items
+                        .map((item: any) => item.name)
+                        .filter(Boolean)
+                        .join("、");
+                      return (
+                        <div className="food-record" key={record._id ?? `${day.key}-${index}`}>
+                          <span>{summary || "一餐饮食"}</span>
+                          <small>
+                            {new Date(record.createdAt).toLocaleTimeString("zh-CN", {
+                              hour: "2-digit",
+                              minute: "2-digit",
+                              hour12: false,
+                            })}
+                          </small>
+                          <b>{record.calories} kcal</b>
+                        </div>
+                      );
+                    })}
+                  </section>
+                ))
+              ) : (
+                <div className="food-empty">
+                  <span>🍽️</span>
+                  <b>还没有饮食记录</b>
+                  <small>拍下第一餐，它会出现在这里。</small>
+                </div>
+              )}
+            </section>
+          )}
         </section>
       )}
       {view === "exercise" && (
