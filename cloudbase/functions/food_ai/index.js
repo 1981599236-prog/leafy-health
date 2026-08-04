@@ -1,16 +1,17 @@
 const crypto = require("crypto");
-const cloudbase = require("@cloudbase/js-sdk");
+const cloudbase = require("@cloudbase/node-sdk");
 
 const app = cloudbase.init({
-  // CloudBase will provide TCB_ENV_ID in the function runtime. The fallback
-  // keeps a first manual deployment simple for this personal project.
-  env: process.env.TCB_ENV_ID || "leafy-health-d6g6dzt250e0fc4d5",
+  // Use the environment that hosts this cloud function. The Node SDK runs
+  // with server-side permissions, so the encrypted AI key stays inaccessible
+  // from the web page.
+  env: cloudbase.SYMBOL_DEFAULT_ENV,
 });
 const db = app.database();
 const collection = "health_ai_configs";
 
 function currentUid() {
-  const { uid } = app.auth.getUserInfo();
+  const { uid } = app.auth().getUserInfo();
   if (!uid) throw new Error("请先登录后再使用 AI 设置");
   return uid;
 }
