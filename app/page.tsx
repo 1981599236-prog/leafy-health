@@ -18,6 +18,26 @@ type Exercise = {
   duration_minutes: number;
   calories: number;
 };
+type ExercisePreset = {
+  activity_type: string;
+  emoji: string;
+  duration_minutes: number;
+  met: number;
+};
+type ExerciseDraft = ExercisePreset;
+type GymMovement = {
+  id: string;
+  name: string;
+  weight_kg: number;
+  sets: number;
+  reps: number;
+};
+type GymTemplate = {
+  id: string;
+  name: string;
+  duration_minutes: number;
+  movements: GymMovement[];
+};
 type Blood = { systolic: string; diastolic: string; heart_rate: string };
 type BloodRecord = {
   _id?: string;
@@ -69,17 +89,35 @@ const emptyAiConfig: AiConfig = {
   apiKey: "",
   keyHint: "",
 };
-const exercises = [
-  { activity_type: "散步", emoji: "🚶", duration_minutes: 30, calories: 110 },
-  { activity_type: "跑步", emoji: "🏃", duration_minutes: 30, calories: 280 },
+const exercises: ExercisePreset[] = [
+  { activity_type: "散步", emoji: "🚶", duration_minutes: 30, met: 3.5 },
+  { activity_type: "跑步", emoji: "🏃", duration_minutes: 30, met: 8.3 },
   {
     activity_type: "力量训练",
     emoji: "🏋️",
     duration_minutes: 40,
-    calories: 250,
+    met: 4.5,
   },
-  { activity_type: "骑车", emoji: "🚲", duration_minutes: 30, calories: 180 },
+  { activity_type: "骑车", emoji: "🚲", duration_minutes: 30, met: 6.8 },
 ];
+const cloneTemplate = (template: GymTemplate): GymTemplate => ({
+  ...template,
+  movements: template.movements.map((movement) => ({ ...movement })),
+});
+const newGymTemplate = (): GymTemplate => ({
+  id: `gym-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+  name: "我的训练",
+  duration_minutes: 45,
+  movements: [
+    {
+      id: `move-${Date.now()}`,
+      name: "动作名称",
+      weight_kg: 0,
+      sets: 3,
+      reps: 12,
+    },
+  ],
+});
 const formatDate = (value: string) => new Date(value).getDate();
 const dayKey = (value: Date | string) => {
   const date = typeof value === "string" ? new Date(value) : value;
@@ -264,6 +302,10 @@ export default function Page() {
   const [intake, setIntake] = useState(0),
     [exerciseTotal, setExerciseTotal] = useState(0),
     [latestExercise, setLatestExercise] = useState<Exercise | null>(null);
+  const [exerciseMode, setExerciseMode] = useState<"quick" | "gym">("quick"),
+    [exerciseDraft, setExerciseDraft] = useState<ExerciseDraft>(exercises[0]),
+    [gymTemplates, setGymTemplates] = useState<GymTemplate[]>([]),
+    [gymDraft, setGymDraft] = useState<GymTemplate | null>(null);
   const [checked, setChecked] = useState<Set<number>>(new Set()),
     [foodStage, setFoodStage] = useState<"upload" | "result" | "history">("upload"),
     [toast, setToast] = useState(""),
@@ -401,6 +443,8 @@ export default function Page() {
       setFoodHistory([]);
       setExerciseHistory([]);
       setSelectedTrendDay(null);
+      setGymTemplates([]);
+      setGymDraft(null);
     }
   }, [user]);
   useEffect(() => {
@@ -439,6 +483,11 @@ export default function Page() {
           activity_level: p.activity_level,
           goal: p.goal,
         });
+        setGymTemplates(
+          Array.isArray(p.gym_templates)
+            ? p.gym_templates.map((template: GymTemplate) => cloneTemplate(template))
+            : [],
+        );
       }
       const bpRows = (bpRes.data ?? []) as any[];
       const foodRows = (foodRes.data ?? []) as any[];
@@ -567,6 +616,7 @@ export default function Page() {
       weight_kg: Number(draft.weight_kg),
       activity_level: draft.activity_level,
       goal: draft.goal,
+      gym_templates: gymTemplates,
       updatedAt: new Date().toISOString(),
     };
     try {
@@ -685,24 +735,69 @@ export default function Page() {
       setToast(`保存失败：${errorMessage(error)}`);
     }
   }
-  async function saveExercise(item: (typeof exercises)[number]) {
+  function exerciseCalories(durationMinutes: number, met: number) {
+    const weightKg = Number(profile?.weight_kg || 60);
+    return Math.max(1, Math.round((met * 3.5 * weightKg * durationMinutes) / 200));
+  }
+  async function saveExercise(item: ExerciseDraft, movements?: GymMovement[]) {
     if (!user) return;
+    const durationMinutes = Math.max(1, Number(item.duration_minutes) || 1);
+    const calories = exerciseCalories(durationMinutes, item.met);
     try {
       await cloudDb
         .collection("health_exercise")
         .add({
           activity_type: item.activity_type,
-          duration_minutes: item.duration_minutes,
-          calories: item.calories,
+          duration_minutes: durationMinutes,
+          calories,
+          met: item.met,
+          movements: movements ?? [],
           createdAt: new Date().toISOString(),
         });
-      setLatestExercise(item);
-      setExerciseTotal((x) => x + item.calories);
+      setLatestExercise({
+        activity_type: item.activity_type,
+        duration_minutes: durationMinutes,
+        calories,
+      });
+      setExerciseTotal((x) => x + calories);
       setChecked((current) => new Set(current).add(now.getDate()));
-      setToast(`${item.activity_type} 已记录，成长值 +30`);
+      setToast(`${item.activity_type} 已记录，预计消耗 ${calories} kcal`);
     } catch (error) {
       setToast(`保存失败：${errorMessage(error)}`);
     }
+  }
+  async function saveGymTemplate() {
+    if (!profileId || !gymDraft) return setToast("请先保存身体档案，再创建训练模板");
+    const name = gymDraft.name.trim();
+    const movements = gymDraft.movements.filter((movement) => movement.name.trim());
+    if (!name || !movements.length) return setToast("请至少填写一个训练动作");
+    const template = { ...gymDraft, name, movements };
+    const exists = gymTemplates.some((item) => item.id === template.id);
+    const next = exists
+      ? gymTemplates.map((item) => (item.id === template.id ? template : item))
+      : [template, ...gymTemplates];
+    try {
+      await cloudDb.collection("health_profiles").doc(profileId).update({
+        gym_templates: next,
+        updatedAt: new Date().toISOString(),
+      });
+      setGymTemplates(next);
+      setGymDraft(cloneTemplate(template));
+      setToast("训练模板已保存，以后可以一键打卡");
+    } catch (error) {
+      setToast(`模板保存失败：${errorMessage(error)}`);
+    }
+  }
+  function updateGymMovement(index: number, field: keyof GymMovement, value: string) {
+    setGymDraft((current) => {
+      if (!current) return current;
+      const movements = current.movements.map((movement, movementIndex) => {
+        if (movementIndex !== index) return movement;
+        if (field === "name") return { ...movement, name: value };
+        return { ...movement, [field]: Math.max(0, Number(value) || 0) };
+      });
+      return { ...current, movements };
+    });
   }
   async function foodFile(e: ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
@@ -1208,26 +1303,299 @@ export default function Page() {
         <section className="page">
           <Back
             title="记录运动"
-            subtitle="选一个项目，立即完成记录"
+            subtitle="选项目、改时长，再轻松打卡"
             go={() => setView("home")}
           />
-          <div className="exercisegrid">
-            {exercises.map((item) => (
-              <button
-                key={item.activity_type}
-                onClick={() => saveExercise(item)}
-              >
-                <span>{item.emoji}</span>
-                <b>{item.activity_type}</b>
-                <small>
-                  {item.duration_minutes} 分钟 · {item.calories} kcal
-                </small>
-              </button>
-            ))}
+          <div className="exercise-tabs">
+            <button
+              className={exerciseMode === "quick" ? "active" : ""}
+              onClick={() => setExerciseMode("quick")}
+            >
+              日常运动
+            </button>
+            <button
+              className={exerciseMode === "gym" ? "active" : ""}
+              onClick={() => setExerciseMode("gym")}
+            >
+              健身房模板
+            </button>
           </div>
-          <p className="helper center">
-            点击即记录，之后随时可以回来继续添加。
-          </p>
+          {exerciseMode === "quick" ? (
+            <>
+              <div className="exercisegrid">
+                {exercises.map((item) => (
+                  <button
+                    key={item.activity_type}
+                    className={
+                      exerciseDraft.activity_type === item.activity_type ? "chosen" : ""
+                    }
+                    onClick={() => setExerciseDraft({ ...item })}
+                  >
+                    <span>{item.emoji}</span>
+                    <b>{item.activity_type}</b>
+                    <small>默认 {item.duration_minutes} 分钟</small>
+                  </button>
+                ))}
+              </div>
+              <section className="exercise-editor">
+                <label>
+                  运动项目
+                  <input
+                    value={exerciseDraft.activity_type}
+                    onChange={(event) =>
+                      setExerciseDraft((draft) => ({
+                        ...draft,
+                        activity_type: event.target.value,
+                      }))
+                    }
+                  />
+                </label>
+                <label>
+                  时长（分钟）
+                  <input
+                    type="number"
+                    min="1"
+                    inputMode="numeric"
+                    value={exerciseDraft.duration_minutes}
+                    onChange={(event) =>
+                      setExerciseDraft((draft) => ({
+                        ...draft,
+                        duration_minutes: Math.max(1, Number(event.target.value) || 1),
+                      }))
+                    }
+                  />
+                </label>
+                <div className="exercise-estimate">
+                  <span>预计消耗</span>
+                  <b>
+                    {exerciseCalories(
+                      exerciseDraft.duration_minutes,
+                      exerciseDraft.met,
+                    )} kcal
+                  </b>
+                  <small>按体重与运动时长估算</small>
+                </div>
+                <button
+                  className="primary"
+                  onClick={() => void saveExercise(exerciseDraft)}
+                >
+                  记录这次运动
+                </button>
+              </section>
+            </>
+          ) : gymDraft ? (
+            <section className="gym-editor">
+              <div className="gym-editor-head">
+                <div>
+                  <p>保存一次，以后可直接打卡</p>
+                  <h2>训练模板</h2>
+                </div>
+                <button type="button" onClick={() => setGymDraft(null)}>
+                  返回模板
+                </button>
+              </div>
+              <label>
+                模板名称
+                <input
+                  value={gymDraft.name}
+                  placeholder="例如：练背"
+                  onChange={(event) =>
+                    setGymDraft((template) =>
+                      template ? { ...template, name: event.target.value } : template,
+                    )
+                  }
+                />
+              </label>
+              <label>
+                本次训练时长（分钟）
+                <input
+                  type="number"
+                  min="1"
+                  inputMode="numeric"
+                  value={gymDraft.duration_minutes}
+                  onChange={(event) =>
+                    setGymDraft((template) =>
+                      template
+                        ? {
+                            ...template,
+                            duration_minutes: Math.max(1, Number(event.target.value) || 1),
+                          }
+                        : template,
+                    )
+                  }
+                />
+              </label>
+              <div className="movement-list">
+                <p>训练动作</p>
+                {gymDraft.movements.map((movement, index) => (
+                  <section className="movement" key={movement.id}>
+                    <div>
+                      <b>动作 {index + 1}</b>
+                      {gymDraft.movements.length > 1 && (
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setGymDraft((template) =>
+                              template
+                                ? {
+                                    ...template,
+                                    movements: template.movements.filter(
+                                      (_, itemIndex) => itemIndex !== index,
+                                    ),
+                                  }
+                                : template,
+                            )
+                          }
+                        >
+                          删除
+                        </button>
+                      )}
+                    </div>
+                    <input
+                      aria-label={`动作 ${index + 1} 名称`}
+                      value={movement.name}
+                      placeholder="例如：高位下拉"
+                      onChange={(event) => updateGymMovement(index, "name", event.target.value)}
+                    />
+                    <div className="movement-numbers">
+                      <label>
+                        重量 kg
+                        <input
+                          type="number"
+                          inputMode="decimal"
+                          min="0"
+                          value={movement.weight_kg}
+                          onChange={(event) =>
+                            updateGymMovement(index, "weight_kg", event.target.value)
+                          }
+                        />
+                      </label>
+                      <label>
+                        组数
+                        <input
+                          type="number"
+                          inputMode="numeric"
+                          min="0"
+                          value={movement.sets}
+                          onChange={(event) => updateGymMovement(index, "sets", event.target.value)}
+                        />
+                      </label>
+                      <label>
+                        每组次数
+                        <input
+                          type="number"
+                          inputMode="numeric"
+                          min="0"
+                          value={movement.reps}
+                          onChange={(event) => updateGymMovement(index, "reps", event.target.value)}
+                        />
+                      </label>
+                    </div>
+                  </section>
+                ))}
+                <button
+                  type="button"
+                  className="add-movement"
+                  onClick={() =>
+                    setGymDraft((template) =>
+                      template
+                        ? {
+                            ...template,
+                            movements: [
+                              ...template.movements,
+                              {
+                                id: `move-${Date.now()}-${template.movements.length}`,
+                                name: "动作名称",
+                                weight_kg: 0,
+                                sets: 3,
+                                reps: 12,
+                              },
+                            ],
+                          }
+                        : template,
+                    )
+                  }
+                >
+                  + 添加动作
+                </button>
+              </div>
+              <div className="exercise-estimate gym-estimate">
+                <span>预计消耗</span>
+                <b>{exerciseCalories(gymDraft.duration_minutes, 4.5)} kcal</b>
+                <small>力量训练按时长估算；重量与组数用于记录你的训练内容</small>
+              </div>
+              <button className="primary" onClick={() => void saveGymTemplate()}>
+                保存模板
+              </button>
+              <button
+                type="button"
+                className="secondary"
+                onClick={() =>
+                  void saveExercise(
+                    {
+                      activity_type: gymDraft.name.trim() || "健身房训练",
+                      emoji: "🏋️",
+                      duration_minutes: gymDraft.duration_minutes,
+                      met: 4.5,
+                    },
+                    gymDraft.movements,
+                  )
+                }
+              >
+                记录这次训练
+              </button>
+            </section>
+          ) : (
+            <section className="gym-templates">
+              <div className="gym-template-head">
+                <div>
+                  <p>固定流程，一次填写</p>
+                  <h2>我的训练模板</h2>
+                </div>
+                <button type="button" onClick={() => setGymDraft(newGymTemplate())}>
+                  + 新建
+                </button>
+              </div>
+              {gymTemplates.length ? (
+                gymTemplates.map((template) => (
+                  <section className="gym-template" key={template.id}>
+                    <div>
+                      <b>{template.name}</b>
+                      <small>
+                        {template.movements.map((movement) => movement.name).join(" · ")}
+                      </small>
+                      <em>{template.duration_minutes} 分钟</em>
+                    </div>
+                    <button
+                      className="template-checkin"
+                      onClick={() =>
+                        void saveExercise(
+                          {
+                            activity_type: template.name,
+                            emoji: "🏋️",
+                            duration_minutes: template.duration_minutes,
+                            met: 4.5,
+                          },
+                          template.movements,
+                        )
+                      }
+                    >
+                      打卡
+                    </button>
+                    <button type="button" onClick={() => setGymDraft(cloneTemplate(template))}>
+                      微调
+                    </button>
+                  </section>
+                ))
+              ) : (
+                <div className="gym-empty">
+                  <span>🏋️</span>
+                  <b>还没有训练模板</b>
+                  <small>例如建立“练背”：高位下拉、划船机等动作。</small>
+                </div>
+              )}
+            </section>
+          )}
         </section>
       )}
       {view === "trend" && (

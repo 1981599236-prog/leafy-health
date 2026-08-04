@@ -714,6 +714,27 @@ nav .active {
   grid-template-columns: 1fr 1fr;
   gap: 11px;
 }
+.exercise-tabs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 7px;
+  margin-bottom: 14px;
+  padding: 4px;
+  border-radius: 14px;
+  background: #ecefe8;
+}
+.exercise-tabs button {
+  height: 38px;
+  border-radius: 11px;
+  color: #839080;
+  font-size: 13px;
+  font-weight: 700;
+}
+.exercise-tabs button.active {
+  background: var(--paper);
+  color: #56754a;
+  box-shadow: 0 2px 8px #67715b13;
+}
 .exercisegrid button {
   background: var(--paper);
   border-radius: 18px;
@@ -725,6 +746,10 @@ nav .active {
   gap: 6px;
   box-shadow: 0 3px 14px #655d3c08;
 }
+.exercisegrid button.chosen {
+  outline: 2px solid #88a975;
+  background: #f2f7ee;
+}
 .exercisegrid span {
   font-size: 28px;
 }
@@ -734,6 +759,226 @@ nav .active {
 .exercisegrid small {
   font-size: 10px;
   color: #8b958b;
+}
+.exercise-editor,
+.gym-editor,
+.gym-templates {
+  margin-top: 15px;
+  padding: 16px;
+  border-radius: 19px;
+  background: var(--paper);
+  box-shadow: 0 3px 14px #655d3c08;
+}
+.exercise-editor {
+  display: grid;
+  grid-template-columns: 1fr 0.8fr;
+  gap: 11px;
+}
+.exercise-editor label,
+.gym-editor > label {
+  display: grid;
+  gap: 6px;
+  color: #65705f;
+  font-size: 12px;
+  font-weight: 700;
+}
+.exercise-editor input,
+.gym-editor > label > input,
+.movement input {
+  width: 100%;
+  height: 43px;
+  padding: 0 11px;
+  border: 1px solid #e2e6de;
+  border-radius: 11px;
+  background: #fbfcf9;
+  color: var(--ink);
+  font-size: 14px;
+  font-weight: 600;
+}
+.exercise-estimate {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: flex-end;
+  grid-column: 1 / -1;
+  padding: 13px;
+  border-radius: 13px;
+  background: #eef4e9;
+  color: #758275;
+}
+.exercise-estimate span,
+.exercise-estimate small {
+  font-size: 11px;
+}
+.exercise-estimate b {
+  color: #a26b49;
+  font-size: 22px;
+}
+.exercise-estimate small {
+  grid-column: 1 / -1;
+  margin-top: 3px;
+}
+.exercise-editor .primary {
+  grid-column: 1 / -1;
+  width: 100%;
+}
+.gym-editor {
+  display: grid;
+  gap: 13px;
+}
+.gym-editor-head,
+.gym-template-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+}
+.gym-editor-head p,
+.gym-template-head p {
+  margin: 0 0 3px;
+  color: var(--muted);
+  font-size: 11px;
+}
+.gym-editor-head h2,
+.gym-template-head h2 {
+  margin: 0;
+  font-size: 19px;
+}
+.gym-editor-head button,
+.gym-template-head button {
+  padding: 8px 10px;
+  border-radius: 10px;
+  background: #edf3e8;
+  color: #5f8152;
+  font-size: 11px;
+  font-weight: 700;
+}
+.movement-list > p {
+  margin: 2px 0 8px;
+  color: #65705f;
+  font-size: 12px;
+  font-weight: 700;
+}
+.movement {
+  display: grid;
+  gap: 9px;
+  margin-bottom: 10px;
+  padding: 12px;
+  border: 1px solid #e5eadf;
+  border-radius: 14px;
+  background: #fafcf8;
+}
+.movement > div:first-child {
+  display: flex;
+  justify-content: space-between;
+  color: #4c5f47;
+  font-size: 12px;
+}
+.movement > div:first-child button {
+  color: #aa7559;
+  font-size: 11px;
+}
+.movement-numbers {
+  display: grid;
+  grid-template-columns: 1fr 0.8fr 1fr;
+  gap: 7px;
+}
+.movement-numbers label {
+  display: grid;
+  gap: 5px;
+  color: var(--muted);
+  font-size: 10px;
+}
+.movement-numbers input {
+  height: 39px;
+  padding: 0 8px;
+  font-size: 13px;
+}
+.add-movement {
+  width: 100%;
+  height: 42px;
+  border: 1px dashed #aac39c;
+  border-radius: 12px;
+  color: #66875b;
+  font-size: 12px;
+  font-weight: 700;
+}
+.gym-estimate {
+  margin-top: 0;
+}
+.gym-editor .primary,
+.gym-editor .secondary {
+  width: 100%;
+  margin: 0;
+}
+.gym-templates {
+  padding: 0;
+  overflow: hidden;
+  background: transparent;
+  box-shadow: none;
+}
+.gym-template-head {
+  margin: 2px 2px 12px;
+}
+.gym-template {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+  padding: 14px;
+  border-radius: 17px;
+  background: var(--paper);
+  box-shadow: 0 3px 14px #655d3c08;
+}
+.gym-template > div {
+  min-width: 0;
+  display: grid;
+  gap: 3px;
+}
+.gym-template b {
+  font-size: 14px;
+}
+.gym-template small {
+  overflow: hidden;
+  color: var(--muted);
+  font-size: 10px;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.gym-template em {
+  color: #879483;
+  font-size: 10px;
+  font-style: normal;
+}
+.gym-template button {
+  padding: 8px 9px;
+  border-radius: 10px;
+  color: #73806f;
+  font-size: 11px;
+  font-weight: 700;
+}
+.gym-template button.template-checkin {
+  background: #71965f;
+  color: #fff;
+}
+.gym-empty {
+  min-height: 215px;
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  gap: 7px;
+  border: 1px dashed #c8d5c0;
+  border-radius: 19px;
+  color: var(--muted);
+}
+.gym-empty span {
+  font-size: 29px;
+}
+.gym-empty b {
+  color: var(--ink);
+  font-size: 14px;
+}
+.gym-empty small {
+  font-size: 11px;
 }
 .calendar {
   background: var(--paper);
