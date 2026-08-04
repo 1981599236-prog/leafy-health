@@ -750,6 +750,92 @@ nav .active {
   outline: 2px solid #88a975;
   background: #f2f7ee;
 }
+.manage-exercises {
+  width: 100%;
+  height: 43px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  margin-top: 12px;
+  border: 1px dashed #adc29f;
+  border-radius: 13px;
+  color: #66875b;
+  font-size: 12px;
+  font-weight: 700;
+}
+.manage-exercises span {
+  font-size: 15px;
+}
+.preset-manager {
+  display: grid;
+  gap: 10px;
+  margin-top: 13px;
+  padding: 16px;
+  border-radius: 19px;
+  background: #f4f8f1;
+}
+.preset-manager > div > p {
+  margin: 0 0 3px;
+  color: var(--muted);
+  font-size: 11px;
+}
+.preset-manager > div > h2 {
+  margin: 0;
+  font-size: 18px;
+}
+.preset-edit {
+  display: grid;
+  gap: 9px;
+  padding: 12px;
+  border: 1px solid #dfe9d9;
+  border-radius: 14px;
+  background: var(--paper);
+}
+.preset-edit > div:first-child {
+  display: flex;
+  justify-content: space-between;
+  color: #4c5f47;
+  font-size: 12px;
+}
+.preset-edit > div:first-child button {
+  color: #aa7559;
+  font-size: 11px;
+}
+.preset-name-row,
+.preset-number-row {
+  display: grid;
+  gap: 8px;
+}
+.preset-name-row {
+  grid-template-columns: 0.45fr 1.55fr;
+}
+.preset-number-row {
+  grid-template-columns: 1fr 1fr;
+}
+.preset-name-row label,
+.preset-number-row label {
+  display: grid;
+  gap: 5px;
+  color: var(--muted);
+  font-size: 10px;
+}
+.preset-name-row input,
+.preset-number-row input,
+.preset-number-row select {
+  width: 100%;
+  height: 39px;
+  padding: 0 9px;
+  border: 1px solid #e2e6de;
+  border-radius: 10px;
+  background: #fbfcf9;
+  color: var(--ink);
+  font-size: 13px;
+}
+.preset-manager .primary {
+  width: 100%;
+  margin: 0;
+}
 .exercisegrid span {
   font-size: 28px;
 }

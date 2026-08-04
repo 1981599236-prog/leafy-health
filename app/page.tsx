@@ -89,7 +89,7 @@ const emptyAiConfig: AiConfig = {
   apiKey: "",
   keyHint: "",
 };
-const exercises: ExercisePreset[] = [
+const defaultExercises: ExercisePreset[] = [
   { activity_type: "散步", emoji: "🚶", duration_minutes: 30, met: 3.5 },
   { activity_type: "跑步", emoji: "🏃", duration_minutes: 30, met: 8.3 },
   {
@@ -303,7 +303,9 @@ export default function Page() {
     [exerciseTotal, setExerciseTotal] = useState(0),
     [latestExercise, setLatestExercise] = useState<Exercise | null>(null);
   const [exerciseMode, setExerciseMode] = useState<"quick" | "gym">("quick"),
-    [exerciseDraft, setExerciseDraft] = useState<ExerciseDraft>(exercises[0]),
+    [exercisePresets, setExercisePresets] = useState<ExercisePreset[]>(defaultExercises),
+    [exerciseDraft, setExerciseDraft] = useState<ExerciseDraft>(defaultExercises[0]),
+    [editingExercisePresets, setEditingExercisePresets] = useState(false),
     [gymTemplates, setGymTemplates] = useState<GymTemplate[]>([]),
     [gymDraft, setGymDraft] = useState<GymTemplate | null>(null);
   const [checked, setChecked] = useState<Set<number>>(new Set()),
@@ -445,6 +447,9 @@ export default function Page() {
       setSelectedTrendDay(null);
       setGymTemplates([]);
       setGymDraft(null);
+      setExercisePresets(defaultExercises);
+      setExerciseDraft(defaultExercises[0]);
+      setEditingExercisePresets(false);
     }
   }, [user]);
   useEffect(() => {
@@ -488,6 +493,17 @@ export default function Page() {
             ? p.gym_templates.map((template: GymTemplate) => cloneTemplate(template))
             : [],
         );
+        const savedExercisePresets = Array.isArray(p.exercise_presets)
+          ? p.exercise_presets.filter(
+              (preset: ExercisePreset) =>
+                preset?.activity_type && Number(preset?.duration_minutes) > 0,
+            )
+          : [];
+        const loadedExercisePresets = savedExercisePresets.length
+          ? savedExercisePresets
+          : defaultExercises;
+        setExercisePresets(loadedExercisePresets);
+        setExerciseDraft({ ...loadedExercisePresets[0] });
       }
       const bpRows = (bpRes.data ?? []) as any[];
       const foodRows = (foodRes.data ?? []) as any[];
@@ -617,6 +633,7 @@ export default function Page() {
       activity_level: draft.activity_level,
       goal: draft.goal,
       gym_templates: gymTemplates,
+      exercise_presets: exercisePresets,
       updatedAt: new Date().toISOString(),
     };
     try {
@@ -798,6 +815,51 @@ export default function Page() {
       });
       return { ...current, movements };
     });
+  }
+  function updateExercisePreset(
+    index: number,
+    field: keyof ExercisePreset,
+    value: string,
+  ) {
+    setExercisePresets((presets) =>
+      presets.map((preset, presetIndex) => {
+        if (presetIndex !== index) return preset;
+        if (field === "activity_type" || field === "emoji") {
+          return { ...preset, [field]: value };
+        }
+        return { ...preset, [field]: Math.max(0.1, Number(value) || 0.1) };
+      }),
+    );
+  }
+  async function saveExercisePresets() {
+    if (!profileId) return setToast("请先保存身体档案，再管理运动项目");
+    const next = exercisePresets
+      .map((preset) => ({
+        ...preset,
+        activity_type: preset.activity_type.trim(),
+        emoji: preset.emoji.trim() || "✨",
+        duration_minutes: Math.max(1, Number(preset.duration_minutes) || 1),
+        met: Math.max(0.1, Number(preset.met) || 0.1),
+      }))
+      .filter((preset) => preset.activity_type);
+    if (!next.length) return setToast("请至少保留一个运动项目");
+    try {
+      await cloudDb.collection("health_profiles").doc(profileId).update({
+        exercise_presets: next,
+        updatedAt: new Date().toISOString(),
+      });
+      setExercisePresets(next);
+      setExerciseDraft((current) => {
+        const matched = next.find(
+          (preset) => preset.activity_type === current.activity_type,
+        );
+        return { ...(matched ?? next[0]) };
+      });
+      setEditingExercisePresets(false);
+      setToast("运动项目已保存");
+    } catch (error) {
+      setToast(`项目保存失败：${errorMessage(error)}`);
+    }
   }
   async function foodFile(e: ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
@@ -1323,7 +1385,7 @@ export default function Page() {
           {exerciseMode === "quick" ? (
             <>
               <div className="exercisegrid">
-                {exercises.map((item) => (
+                {exercisePresets.map((item) => (
                   <button
                     key={item.activity_type}
                     className={
@@ -1337,6 +1399,114 @@ export default function Page() {
                   </button>
                 ))}
               </div>
+              <button
+                type="button"
+                className="manage-exercises"
+                onClick={() => setEditingExercisePresets((editing) => !editing)}
+              >
+                <span>⚙</span>
+                {editingExercisePresets ? "收起项目管理" : "管理运动项目"}
+              </button>
+              {editingExercisePresets && (
+                <section className="preset-manager">
+                  <div>
+                    <p>修改后会成为之后的默认项目</p>
+                    <h2>我的运动项目</h2>
+                  </div>
+                  {exercisePresets.map((preset, index) => (
+                    <section className="preset-edit" key={`${preset.activity_type}-${index}`}>
+                      <div>
+                        <b>项目 {index + 1}</b>
+                        {exercisePresets.length > 1 && (
+                          <button
+                            type="button"
+                            onClick={() =>
+                              setExercisePresets((presets) =>
+                                presets.filter((_, presetIndex) => presetIndex !== index),
+                              )
+                            }
+                          >
+                            删除
+                          </button>
+                        )}
+                      </div>
+                      <div className="preset-name-row">
+                        <label>
+                          图标
+                          <input
+                            value={preset.emoji}
+                            maxLength={4}
+                            onChange={(event) =>
+                              updateExercisePreset(index, "emoji", event.target.value)
+                            }
+                          />
+                        </label>
+                        <label>
+                          名称
+                          <input
+                            value={preset.activity_type}
+                            onChange={(event) =>
+                              updateExercisePreset(index, "activity_type", event.target.value)
+                            }
+                          />
+                        </label>
+                      </div>
+                      <div className="preset-number-row">
+                        <label>
+                          默认分钟
+                          <input
+                            type="number"
+                            min="1"
+                            inputMode="numeric"
+                            value={preset.duration_minutes}
+                            onChange={(event) =>
+                              updateExercisePreset(
+                                index,
+                                "duration_minutes",
+                                event.target.value,
+                              )
+                            }
+                          />
+                        </label>
+                        <label>
+                          强度
+                          <select
+                            value={preset.met}
+                            onChange={(event) =>
+                              updateExercisePreset(index, "met", event.target.value)
+                            }
+                          >
+                            <option value="3.5">轻松</option>
+                            <option value="5">中等</option>
+                            <option value="6.8">较高</option>
+                            <option value="8.3">高强度</option>
+                          </select>
+                        </label>
+                      </div>
+                    </section>
+                  ))}
+                  <button
+                    type="button"
+                    className="add-movement"
+                    onClick={() =>
+                      setExercisePresets((presets) => [
+                        ...presets,
+                        {
+                          activity_type: "新运动",
+                          emoji: "✨",
+                          duration_minutes: 30,
+                          met: 5,
+                        },
+                      ])
+                    }
+                  >
+                    + 新增运动项目
+                  </button>
+                  <button className="primary" onClick={() => void saveExercisePresets()}>
+                    保存运动项目
+                  </button>
+                </section>
+              )}
               <section className="exercise-editor">
                 <label>
                   运动项目
