@@ -98,8 +98,18 @@ async function recognize(config, imageDataUrl) {
   const endpoint = config.base_url.endsWith("/chat/completions")
     ? config.base_url
     : `${config.base_url}/chat/completions`;
-  const instruction = "你是食物图片分析助手。只返回 JSON，不要 Markdown。格式：{items:[{name,portion,grams,calories}],totalCalories,proteinG,carbsG,fatG}。所有数值为估算；无法确定时给出最合理估计。";
-  const userPrompt = "请识别这张餐食图片中的食物、估算份量、热量与营养素。";
+  const instruction = [
+    "你是保守、可复现的日常食物记录助手。只返回 JSON，不要 Markdown。",
+    "必须使用格式：{items:[{name,portion,grams,calories}],totalCalories,proteinG,carbsG,fatG}。",
+    "只列出照片中清楚可见的食物；不要猜测被遮住的食材、油、糖、酱汁或菜名中没有看见的配料。",
+    "无法可靠识别的内容可以不列出，绝对不要编造食物名称。",
+    "份量只能根据可见的盘、碗和食物体积估算；没有尺度时使用普通成年人一餐的标准中等份量。",
+    "热量必须采用常见熟食的固定平均值估算，同一种食物和相近份量应给出相近结果。",
+    "不要因为不确定而随意增加油、调料或隐藏配料的热量；只能在照片中明显可见时计算。",
+    "所有 grams、calories、totalCalories、proteinG、carbsG、fatG 都必须是非负整数；calories 和 totalCalories 必须四舍五入到最接近的 10 kcal。",
+    "totalCalories 必须等于所有 items.calories 之和。营养素同样只作保守估计。",
+  ].join("\\n");
+  const userPrompt = "请按以上固定、保守规则识别这张餐食照片，并给出日常记录用的估算。";
   const isTencentTokenHub = new URL(config.base_url).hostname === "tokenhub.tencentmaas.com";
   const messages = isTencentTokenHub
     ? [
@@ -127,7 +137,7 @@ async function recognize(config, imageDataUrl) {
     body: JSON.stringify({
       model: config.model_name,
       messages,
-      temperature: 0.2,
+      temperature: 0,
     }),
   });
   const body = await response.json().catch(() => ({}));
