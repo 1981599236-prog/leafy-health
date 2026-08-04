@@ -42,6 +42,8 @@ type FoodAnalysis = {
   proteinG: number;
   carbsG: number;
   fatG: number;
+  sugarG: number;
+  fiberG: number;
 };
 type FoodHistoryDay = {
   key: string;
@@ -667,6 +669,8 @@ export default function Page() {
         protein_g: foodAnalysis.proteinG,
         carbs_g: foodAnalysis.carbsG,
         fat_g: foodAnalysis.fatG,
+        sugar_g: foodAnalysis.sugarG,
+        fiber_g: foodAnalysis.fiberG,
         createdAt: new Date().toISOString(),
       };
       await cloudDb.collection("health_food").add(record);
@@ -1116,12 +1120,20 @@ export default function Page() {
                 />
               ))}
               <div className="nutri">
-                蛋白质 <b>{foodAnalysis.proteinG}g</b>
+                <span>
+                  蛋白质 <b>{foodAnalysis.proteinG}g</b>
+                </span>
                 <span>
                   碳水 <b>{foodAnalysis.carbsG}g</b>
                 </span>
                 <span>
                   脂肪 <b>{foodAnalysis.fatG}g</b>
+                </span>
+                <span>
+                  糖 <b>{foodAnalysis.sugarG}g</b>
+                </span>
+                <span>
+                  膳食纤维 <b>{foodAnalysis.fiberG}g</b>
                 </span>
               </div>
               <h2>

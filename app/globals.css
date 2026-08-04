@@ -585,11 +585,15 @@ nav .active {
   background: #eef4e9;
   border-radius: 12px;
   padding: 12px;
-  display: flex;
-  justify-content: space-between;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px 7px;
   margin-top: 14px;
   color: #758275;
   font-size: 11px;
+}
+.nutri span {
+  white-space: nowrap;
 }
 .nutri b {
   color: #465645;
