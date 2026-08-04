@@ -131,7 +131,14 @@ async function photoForAi(file: File) {
     const context = canvas.getContext("2d");
     if (!context) throw new Error("图片处理暂时不可用，请稍后再试");
     context.drawImage(image, 0, 0, canvas.width, canvas.height);
-    return canvas.toDataURL("image/jpeg", 0.8);
+    const compressed = await new Promise<Blob>((resolve, reject) => {
+      canvas.toBlob(
+        (blob) => (blob ? resolve(blob) : reject(new Error("图片压缩失败，请换一张照片再试"))),
+        "image/jpeg",
+        0.8,
+      );
+    });
+    return new File([compressed], "meal.jpg", { type: "image/jpeg" });
   } finally {
     URL.revokeObjectURL(source);
   }
@@ -669,15 +676,29 @@ export default function Page() {
       return setToast("请先到“我的”页面填好 AI 模型设置");
     setIsRecognizing(true);
     setToast("AI 正在识别这餐，请稍等…");
+    let uploadedFileId = "";
     try {
-      const imageDataUrl = await photoForAi(file);
-      const result = await callFoodAi({ action: "recognize", imageDataUrl });
+      const preparedPhoto = await photoForAi(file);
+      const upload = await (cloudApp as any).uploadFile({
+        cloudPath: `food-ai/${Date.now()}-${Math.random().toString(36).slice(2)}.jpg`,
+        filePath: preparedPhoto,
+      });
+      uploadedFileId = upload.fileID;
+      const links = await (cloudApp as any).getTempFileURL({
+        fileList: [uploadedFileId],
+      });
+      const imageUrl = links?.fileList?.[0]?.tempFileURL;
+      if (!imageUrl) throw new Error("临时图片链接生成失败，请稍后再试");
+      const result = await callFoodAi({ action: "recognize", imageDataUrl: imageUrl });
       setFoodAnalysis(result as FoodAnalysis);
       setFoodStage("result");
       setToast("识别完成，确认后再记录");
     } catch (error) {
       setToast(`识别失败：${errorMessage(error)}`);
     } finally {
+      if (uploadedFileId) {
+        void (cloudApp as any).deleteFile({ fileList: [uploadedFileId] }).catch(() => {});
+      }
       setIsRecognizing(false);
     }
   }

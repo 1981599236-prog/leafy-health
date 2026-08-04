@@ -88,30 +88,44 @@ function normalizeAnalysis(data) {
 }
 
 async function recognize(config, imageDataUrl) {
-  if (!String(imageDataUrl || "").startsWith("data:image/")) throw new Error("请上传一张图片");
-  if (imageDataUrl.length > 4_000_000) throw new Error("图片过大，请重新拍摄或选择较小的照片");
+  const imageUrl = String(imageDataUrl || "");
+  const isDataImage = imageUrl.startsWith("data:image/");
+  const isHttpsImage = imageUrl.startsWith("https://");
+  if (!isDataImage && !isHttpsImage) throw new Error("请上传一张图片");
+  if (isDataImage && imageUrl.length > 4_000_000) throw new Error("图片过大，请重新拍摄或选择较小的照片");
   const apiKey = decrypt(config.encrypted_api_key);
   const endpoint = config.base_url.endsWith("/chat/completions")
     ? config.base_url
     : `${config.base_url}/chat/completions`;
+  const instruction = "你是食物图片分析助手。只返回 JSON，不要 Markdown。格式：{items:[{name,portion,grams,calories}],totalCalories,proteinG,carbsG,fatG}。所有数值为估算；无法确定时给出最合理估计。";
+  const userPrompt = "请识别这张餐食图片中的食物、估算份量、热量与营养素。";
+  const isTencentTokenHub = new URL(config.base_url).hostname === "tokenhub.tencentmaas.com";
+  const messages = isTencentTokenHub
+    ? [
+        {
+          role: "user",
+          content: [
+            { type: "image_url", image_url: { url: imageUrl } },
+            { type: "text", text: `${instruction}\n${userPrompt}` },
+          ],
+        },
+      ]
+    : [
+        { role: "system", content: instruction },
+        {
+          role: "user",
+          content: [
+            { type: "text", text: userPrompt },
+            { type: "image_url", image_url: { url: imageUrl } },
+          ],
+        },
+      ];
   const response = await fetch(endpoint, {
     method: "POST",
     headers: { "Content-Type": "application/json", Authorization: `Bearer ${apiKey}` },
     body: JSON.stringify({
       model: config.model_name,
-      messages: [
-        {
-          role: "system",
-          content: "你是食物图片分析助手。只返回 JSON，不要 Markdown。格式：{items:[{name,portion,grams,calories}],totalCalories,proteinG,carbsG,fatG}。所有数值为估算；无法确定时给出最合理估计。",
-        },
-        {
-          role: "user",
-          content: [
-            { type: "text", text: "请识别这张餐食图片中的食物、估算份量、热量与营养素。" },
-            { type: "image_url", image_url: { url: imageDataUrl } },
-          ],
-        },
-      ],
+      messages,
       temperature: 0.2,
     }),
   });
