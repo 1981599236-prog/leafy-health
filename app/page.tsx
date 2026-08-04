@@ -1268,12 +1268,16 @@ export default function Page() {
               />
             </label>
             <label>
-              API Key
+              {aiConfig.configured ? "API Key（已安全保存）" : "API Key"}
               <input
                 type="password"
                 value={aiConfig.apiKey}
                 autoComplete="off"
-                placeholder={aiConfig.configured ? "留空＝保留当前 Key" : "首次保存时必填"}
+                placeholder={
+                  aiConfig.configured
+                    ? "已加密保存；留空即可继续使用当前 Key"
+                    : "首次保存时必填"
+                }
                 onChange={(event) =>
                   setAiConfig((value) => ({ ...value, apiKey: event.target.value }))
                 }
@@ -1287,7 +1291,9 @@ export default function Page() {
               {aiConfigSaving ? "正在安全保存…" : "保存 AI 设置"}
             </button>
             <em>
-              支持 OpenAI 兼容的图片识别接口。API Key 只会加密保存在腾讯云，网页不会显示它。
+              {aiConfig.configured
+                ? "当前 Key 已加密保存在腾讯云，网页不会显示完整内容，也无需每次重新填写。"
+                : "API Key 只会加密保存在腾讯云，网页不会显示它。"}
             </em>
           </div>
           <button className="logout" onClick={() => supabase.auth.signOut()}>
