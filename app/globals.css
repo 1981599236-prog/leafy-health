@@ -1425,3 +1425,876 @@ nav .active {
     box-shadow: 0 0 50px #53604d2e;
   }
 }
+
+/* Night garden redesign: a dark, photo-led mobile surface without changing app flows. */
+:root {
+  --ink: #f1eee7;
+  --muted: #a5a59d;
+  --paper: #151817;
+  --bg: #0b0d0c;
+  --sage: #d5a65d;
+  --pale: #20251e;
+  --line: #292d29;
+}
+
+html {
+  color-scheme: dark;
+  background: #090b0a;
+}
+
+body {
+  background:
+    radial-gradient(circle at 50% -18%, #273022 0, transparent 32rem),
+    #090b0a;
+  color: var(--ink);
+  min-height: 100dvh;
+}
+
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.2;
+  background-image: radial-gradient(#d3d2c7 0.6px, transparent 0.6px);
+  background-size: 5px 5px;
+  mask-image: linear-gradient(to bottom, #000, transparent 70%);
+}
+
+.shell {
+  min-height: 100dvh;
+  background: #0b0d0c;
+}
+
+.app {
+  padding-bottom: 96px;
+}
+
+.page {
+  padding: 22px 16px 28px;
+}
+
+.loading {
+  min-height: 100dvh;
+  color: #b9b9af;
+}
+
+.login,
+.onboarding {
+  min-height: 100dvh;
+  padding: 48px 24px 36px;
+  background:
+    radial-gradient(circle at 88% 7%, #28351f 0, transparent 17rem),
+    #0b0d0c;
+}
+
+.seed {
+  width: 60px;
+  height: 60px;
+  display: grid;
+  place-items: center;
+  border: 1px solid #3b4337;
+  border-radius: 22px;
+  background: #171c16;
+  font-size: 29px;
+}
+
+.login > p,
+.onboarding > p {
+  color: #d8ad67;
+  letter-spacing: 0.04em;
+}
+
+.login h1,
+.onboarding h1 {
+  color: #f4f1ea;
+  font-size: clamp(34px, 10vw, 46px);
+  line-height: 1.05;
+  letter-spacing: -0.065em;
+}
+
+.login label,
+.onboarding label,
+.settings label,
+.exercise-editor label,
+.gym-editor > label {
+  color: #d9d8ce;
+}
+
+.login input,
+.onboarding input,
+.settings label input,
+.exercise-editor input,
+.gym-editor > label > input,
+.movement input,
+.preset-name-row input,
+.preset-number-row input,
+.preset-number-row select {
+  border-color: #303631;
+  background: #141715;
+  color: #f2eee6;
+}
+
+.login input:focus,
+.onboarding input:focus,
+.settings label input:focus,
+.exercise-editor input:focus,
+.gym-editor > label > input:focus,
+.movement input:focus {
+  border-color: #d4a55d;
+  box-shadow: 0 0 0 3px #d4a55d26;
+}
+
+.notice,
+.intro {
+  color: #b7b8af;
+  background: transparent;
+}
+
+.choices button {
+  border-color: #303631;
+  background: #141715;
+  color: #c9cac1;
+}
+
+.chosen {
+  background: #d5a65d !important;
+  color: #17140f !important;
+}
+
+.primary {
+  min-height: 54px;
+  border-radius: 18px;
+  background: #d5a65d;
+  color: #17140f;
+  box-shadow: 0 10px 26px #d5a65d26;
+}
+
+.primary:active,
+.secondary:active,
+.action:active,
+nav button:active {
+  transform: scale(0.98);
+}
+
+.toast {
+  z-index: 30;
+  bottom: 88px;
+  background: #272c27;
+  border: 1px solid #414940;
+  color: #f1eee7;
+  box-shadow: 0 14px 34px #00000042;
+}
+
+.homehead {
+  align-items: flex-start;
+  padding: 3px 2px 0;
+}
+
+.homehead p,
+.title p {
+  color: #adada5;
+  font-size: 11px;
+}
+
+.homehead h1,
+.title h1 {
+  color: #f5f2eb;
+  font-size: 31px;
+  letter-spacing: -0.07em;
+}
+
+.homehead > div > span {
+  color: #a9aca4;
+}
+
+.avatar {
+  width: 44px;
+  height: 44px;
+  border: 1px solid #3d4638;
+  background: #1a2118;
+  color: #dfb66d;
+  box-shadow: inset 0 1px 0 #ffffff0d;
+}
+
+.plant {
+  height: 294px;
+  margin: 18px 0 20px;
+  overflow: hidden;
+  border: 1px solid #333a31;
+  border-radius: 28px;
+  background:
+    radial-gradient(circle at 72% 18%, #d7ad66 0 1px, transparent 2px),
+    radial-gradient(circle at 33% 17%, #d7ad66 0 1px, transparent 2px),
+    linear-gradient(150deg, #1e281f 0%, #111713 55%, #0b0f0d 100%);
+  box-shadow: 0 22px 45px #0000003b, inset 0 1px 0 #ffffff0a;
+}
+
+.plant::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(circle at 71% 15%, #d9bb82 0 11%, transparent 11.5%),
+    linear-gradient(180deg, transparent 54%, #090b0ae6 100%);
+  opacity: 0.92;
+}
+
+.plant-moon,
+.plant-haze,
+.plant-hill,
+.branch,
+.pot-rim {
+  position: absolute;
+}
+
+.plant-moon {
+  right: 36px;
+  top: 22px;
+  width: 74px;
+  height: 74px;
+  border-radius: 50%;
+  background: #d9bb82;
+  box-shadow: 0 0 48px #d5a65d29;
+}
+
+.plant-haze {
+  left: -40px;
+  right: -40px;
+  bottom: 55px;
+  height: 82px;
+  border-radius: 50%;
+  background: #80906c14;
+  filter: blur(16px);
+}
+
+.plant-hill {
+  z-index: 1;
+  bottom: -48px;
+  border-radius: 50% 50% 0 0;
+  background: #101710;
+}
+
+.hill-one {
+  left: -62px;
+  width: 290px;
+  height: 104px;
+}
+
+.hill-two {
+  right: -84px;
+  width: 300px;
+  height: 123px;
+  background: #0c110d;
+}
+
+.stem,
+.leaf,
+.flower,
+.branch,
+.pot,
+.pot-rim {
+  z-index: 3;
+}
+
+.stem {
+  width: 9px;
+  height: 127px;
+  bottom: 43px;
+  left: calc(50% - 4px);
+  background: linear-gradient(90deg, #4e643e, #91a66e 54%, #354a2e);
+  border-radius: 99px;
+  transform: rotate(5deg);
+}
+
+.branch {
+  height: 7px;
+  border-radius: 99px;
+  background: #5f7448;
+  transform-origin: right center;
+}
+
+.branch-one {
+  width: 85px;
+  bottom: 136px;
+  left: calc(50% - 81px);
+  transform: rotate(-28deg);
+}
+
+.branch-two {
+  width: 72px;
+  bottom: 160px;
+  left: 50%;
+  transform: rotate(26deg);
+}
+
+.leaf {
+  width: 82px;
+  height: 44px;
+  bottom: 142px;
+  left: calc(50% - 76px);
+  border-radius: 100% 0 100% 0;
+  background: linear-gradient(140deg, #b9c973, #607c42 72%);
+  box-shadow: inset 6px 3px 9px #e3e59e28;
+  transform: rotate(-30deg);
+}
+
+.l2 {
+  bottom: 168px;
+  left: 48%;
+  background: linear-gradient(38deg, #9ab664, #46643a 78%);
+  transform: scaleX(-1) rotate(-30deg);
+}
+
+.l3 {
+  width: 54px;
+  height: 30px;
+  bottom: 200px;
+  left: calc(50% - 47px);
+}
+
+.l4 {
+  width: 58px;
+  height: 32px;
+  bottom: 211px;
+  left: 47%;
+}
+
+.flower {
+  bottom: 225px;
+  left: calc(50% - 17px);
+  color: #e0ad6b;
+  text-shadow: 0 0 20px #d9a55b55;
+}
+
+.pot-rim {
+  z-index: 4;
+  bottom: 62px;
+  left: calc(50% - 66px);
+  width: 132px;
+  height: 19px;
+  border-radius: 50%;
+  background: #c08b4c;
+  box-shadow: inset 0 -6px 0 #714828;
+}
+
+.pot {
+  z-index: 3;
+  width: 112px;
+  height: 77px;
+  bottom: 0;
+  left: calc(50% - 56px);
+  background: linear-gradient(90deg, #613d28, #bb7948 52%, #71442c);
+  clip-path: polygon(0 0, 100% 0, 85% 100%, 15% 100%);
+}
+
+.plant-label {
+  z-index: 5;
+  left: 19px;
+  bottom: 18px;
+  color: #f4f0e7;
+}
+
+.plant-label b {
+  font-size: 18px;
+  letter-spacing: -0.04em;
+}
+
+.plant-label span {
+  color: #c4c5bb;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .plant-moon {
+    animation: moon-breathe 4s ease-in-out infinite alternate;
+  }
+}
+
+.sectiontitle {
+  margin: 0 2px 12px;
+  color: #f1eee7;
+  font-size: 17px;
+}
+
+.sectiontitle i,
+.energy h2 i {
+  background: #222820;
+  color: #d5a65d;
+}
+
+.quick-actions {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 9px;
+}
+
+.quick-actions .action {
+  position: relative;
+  min-height: 117px;
+  margin: 0;
+  padding: 13px 8px 11px;
+  display: grid;
+  justify-items: center;
+  align-content: start;
+  gap: 8px;
+  overflow: hidden;
+  border: 1px solid #2d322d;
+  border-radius: 22px;
+  background: #151815;
+  color: #f0ede5;
+  box-shadow: none;
+}
+
+.quick-actions .action::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(140deg, #ffffff08, transparent 42%);
+}
+
+.quick-actions .action > span {
+  width: 52px;
+  height: 52px;
+  border: 1px solid #524733;
+  border-radius: 50%;
+  background: #282216;
+  font-size: 23px;
+}
+
+.quick-actions .action:nth-child(2) > span {
+  border-color: #4e5940;
+  background: #1b241a;
+}
+
+.quick-actions .action:nth-child(3) > span {
+  border-color: #414e50;
+  background: #172124;
+}
+
+.quick-actions .action div {
+  display: block;
+  width: 100%;
+  margin: 0;
+  text-align: center;
+}
+
+.quick-actions .action b {
+  display: block;
+  overflow: hidden;
+  color: #f0ede6;
+  font-size: 12px;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.quick-actions .action small {
+  display: none;
+}
+
+.quick-actions .action i {
+  position: absolute;
+  right: 10px;
+  top: 9px;
+  color: #d5a65d;
+  font-size: 14px;
+}
+
+.energy {
+  margin-top: 24px;
+}
+
+.energy h2 {
+  color: #f0ede5;
+}
+
+.energy > div {
+  border: 1px solid #2e342d;
+  border-radius: 23px;
+  background: linear-gradient(115deg, #1b201c, #121512);
+  padding: 15px 6px;
+}
+
+.energy span {
+  border-color: #343a33;
+}
+
+.energy small,
+.energy i,
+.bmr i {
+  color: #a8aaa1;
+}
+
+.energy b {
+  color: #f2eee6;
+  font-size: 15px;
+}
+
+.calendar,
+.card,
+.trend,
+.profilecard,
+.food-day,
+.gym-template,
+.exercise-editor,
+.gym-editor,
+.gym-templates,
+.food-history-link {
+  border: 1px solid #292f29;
+  background: #151815;
+  color: #efebe3;
+  box-shadow: none;
+}
+
+.calendar {
+  border-radius: 23px;
+}
+
+.calendar p,
+.calendar > small,
+.calendar em,
+.calendar header,
+.calendar main > b,
+.back p,
+.helper,
+.food-record small,
+.gym-template small,
+.gym-template em,
+.trend small,
+.settings > small,
+.bmr span,
+.bmr small,
+.profilecard small {
+  color: #a5a79e;
+}
+
+.calendar h2,
+.back h1,
+.food-history-head h2,
+.trend h2,
+.profilecard b,
+.settings > b {
+  color: #f2eee6;
+}
+
+.calendar strong,
+.bmr strong,
+.food-day > header b,
+.food-record b,
+.row b,
+.foodresult h2 strong {
+  color: #d5a65d;
+}
+
+.calendar strong i {
+  color: #a8a396;
+}
+
+.calendar .checked {
+  background: #d5a65d;
+  color: #17140f;
+  box-shadow: 0 4px 10px #d5a65d33;
+}
+
+.calendar .today:not(.checked) {
+  border-color: #d5a65d;
+  color: #d5a65d;
+}
+
+.calendar .future {
+  color: #555a54;
+}
+
+.back > button {
+  background: #1a1e1a;
+  border: 1px solid #303731;
+  color: #e7e3da;
+}
+
+.bp label,
+.reference,
+.exercise-estimate,
+.trend-detail {
+  color: #b5b7ad;
+}
+
+.bp input {
+  border: 1px solid #303631;
+  background: #101310;
+  color: #f1ede5;
+}
+
+.bp > b,
+.bp small {
+  color: #8f938b;
+}
+
+.reference,
+.exercise-estimate,
+.trend-detail {
+  border: 1px solid #303730;
+  background: #1b211b;
+}
+
+.reference span,
+.exercise-estimate span,
+.exercise-estimate small,
+.trend-detail > p,
+.trend-detail em {
+  color: #a7ab9f;
+}
+
+.trend-detail b,
+.nutri b {
+  color: #e8e4da;
+}
+
+.upload,
+.food-empty,
+.gym-empty {
+  border-color: #55513e;
+  background: #151913;
+  color: #bebbb0;
+}
+
+.upload b,
+.food-empty b,
+.gym-empty b {
+  color: #f0ece3;
+}
+
+.upload span,
+.food-empty small,
+.gym-empty small {
+  color: #a9aaa0;
+}
+
+.food-history-link {
+  color: #f1ede5;
+}
+
+.food-history-link > span {
+  background: #232719;
+  color: #d5a65d;
+}
+
+.food-history-link small,
+.food-history-link i {
+  color: #a9aba1;
+}
+
+.foodemoji {
+  border: 1px solid #3b382c;
+  background: linear-gradient(135deg, #352d21, #171914);
+}
+
+.row,
+.food-day > header,
+.food-record {
+  border-color: #2b302b;
+}
+
+.nutri {
+  border: 1px solid #303730;
+  background: #1b211b;
+  color: #afb2a8;
+}
+
+.secondary {
+  border-color: #42483f;
+  background: #171a17;
+  color: #dfd9cf;
+}
+
+.exercise-tabs {
+  border: 1px solid #2c322c;
+  background: #151815;
+}
+
+.exercise-tabs button {
+  color: #9fa199;
+}
+
+.exercise-tabs button.active {
+  background: #d5a65d;
+  color: #17140f;
+  box-shadow: none;
+}
+
+.exercisegrid button {
+  border: 1px solid #2e342e;
+  background: #151815;
+  color: #f0ece4;
+  box-shadow: none;
+}
+
+.exercisegrid button.chosen {
+  outline-color: #d5a65d;
+  background: #201e17;
+}
+
+.exercisegrid small,
+.manage-exercises,
+.preset-edit > div:first-child,
+.preset-name-row label,
+.preset-number-row label,
+.movement-numbers label {
+  color: #a9aba1;
+}
+
+.manage-exercises,
+.add-movement {
+  border-color: #62563e;
+  background: #181914;
+  color: #d9b36f;
+}
+
+.preset-manager,
+.movement {
+  border-color: #303730;
+  background: #1a1e1a;
+}
+
+.preset-edit {
+  border-color: #323932;
+  background: #151815;
+}
+
+.preset-edit > div:first-child button,
+.movement > div:first-child button {
+  color: #d3a36e;
+}
+
+.gym-editor-head p,
+.gym-template-head p,
+.movement-list > p,
+.gym-editor-head h2,
+.gym-template-head h2,
+.movement > div:first-child {
+  color: #d9d9cf;
+}
+
+.gym-editor-head button,
+.gym-template-head button {
+  background: #242a23;
+  color: #dfb66d;
+}
+
+.gym-template button.template-checkin {
+  background: #d5a65d;
+  color: #17140f;
+}
+
+.gym-template button {
+  background: #242822;
+  color: #ddd8ce;
+}
+
+.trend-tabs button {
+  border-color: #343a33;
+  background: #151815;
+  color: #b6b8af;
+}
+
+.trend-tabs button.active {
+  border-color: #695c3f;
+  background: #2d281d;
+  color: #e1ba74;
+}
+
+.trend-heading > span {
+  background: #23271f;
+  color: #dfb66d;
+}
+
+.blood-chart,
+.metric-chart {
+  border-color: #323831;
+}
+
+.blood-day.has-record:active,
+.blood-day.selected {
+  background: #23291f;
+}
+
+.blood-bars .systolic,
+.metric-day i {
+  background: #c69a54;
+}
+
+.blood-bars .diastolic,
+.metric-day i.negative {
+  background: #71886b;
+}
+
+.profilecard {
+  background: linear-gradient(115deg, #1c241b, #151815);
+}
+
+.profilecard button {
+  color: #dfb66d;
+}
+
+.settings button {
+  color: #e7e2d8;
+}
+
+.settings .ai-save {
+  background: #d5a65d;
+  color: #17140f;
+}
+
+.settings em {
+  color: #a4a69e;
+}
+
+.logout {
+  background: #201714;
+  color: #d4a177;
+}
+
+nav {
+  position: fixed;
+  z-index: 20;
+  bottom: 0;
+  left: 50%;
+  width: min(480px, 100vw);
+  height: 78px;
+  padding-top: 10px;
+  border-color: #2a302a;
+  background: #111411ed;
+  box-shadow: 0 -12px 35px #00000026;
+  transform: translateX(-50%);
+  backdrop-filter: blur(18px);
+}
+
+nav button {
+  color: #858a82;
+}
+
+nav .active {
+  color: #e1b66b;
+}
+
+@keyframes moon-breathe {
+  from { opacity: 0.72; transform: scale(0.97); }
+  to { opacity: 0.98; transform: scale(1.03); }
+}
+
+@media (min-width: 481px) {
+  .shell {
+    box-shadow: 0 0 70px #00000052;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

@@ -202,7 +202,10 @@ const supabase = {
 function Plant({ growth }: { growth: number }) {
   return (
     <section className="plant">
-      <div className="sun" />
+      <div className="plant-moon" />
+      <div className="plant-haze" />
+      <div className="plant-hill hill-one" />
+      <div className="plant-hill hill-two" />
       <div className="leaf l1" />
       <div className="leaf l2" />
       {growth >= 30 && (
@@ -212,7 +215,10 @@ function Plant({ growth }: { growth: number }) {
         </>
       )}
       {growth >= 60 && <div className="flower">✿</div>}
+      <div className="branch branch-one" />
+      <div className="branch branch-two" />
       <div className="stem" />
+      <div className="pot-rim" />
       <div className="pot" />
       <div className="plant-label">
         <b>
@@ -1097,37 +1103,39 @@ export default function Page() {
           <h2 className="sectiontitle">
             今天，做这三件小事 <i>{growth}/90</i>
           </h2>
-          <Action
-            emoji="🩺"
-            title={bloodDone ? "血压已记录" : "记录血压"}
-            detail={
-              bloodDone
-                ? `${blood.systolic} / ${blood.diastolic}${blood.heart_rate ? ` · ${blood.heart_rate} bpm` : ""}`
-                : "花 10 秒，了解此刻的自己"
-            }
-            done={bloodDone}
-            click={() => setView("blood")}
-          />
-          <Action
-            emoji="🍱"
-            title={intake ? "饮食已记录" : "记录饮食"}
-            detail={
-              intake ? `今日已摄入 ${intake} kcal` : "拍张照，剩下交给 AI"
-            }
-            done={intake > 0}
-            click={() => setView("food")}
-          />
-          <Action
-            emoji="🏃"
-            title={exerciseTotal ? "运动已记录" : "记录运动"}
-            detail={
-              latestExercise
-                ? `${latestExercise.activity_type} · 今日 ${exerciseTotal} kcal`
-                : "动一动，也给自己一个赞"
-            }
-            done={exerciseTotal > 0}
-            click={() => setView("exercise")}
-          />
+          <div className="quick-actions">
+            <Action
+              emoji="🩺"
+              title={bloodDone ? "血压已记录" : "记录血压"}
+              detail={
+                bloodDone
+                  ? `${blood.systolic} / ${blood.diastolic}${blood.heart_rate ? ` · ${blood.heart_rate} bpm` : ""}`
+                  : "花 10 秒，了解此刻的自己"
+              }
+              done={bloodDone}
+              click={() => setView("blood")}
+            />
+            <Action
+              emoji="🍱"
+              title={intake ? "饮食已记录" : "记录饮食"}
+              detail={
+                intake ? `今日已摄入 ${intake} kcal` : "拍张照，剩下交给 AI"
+              }
+              done={intake > 0}
+              click={() => setView("food")}
+            />
+            <Action
+              emoji="🏃"
+              title={exerciseTotal ? "运动已记录" : "记录运动"}
+              detail={
+                latestExercise
+                  ? `${latestExercise.activity_type} · 今日 ${exerciseTotal} kcal`
+                  : "动一动，也给自己一个赞"
+              }
+              done={exerciseTotal > 0}
+              click={() => setView("exercise")}
+            />
+          </div>
           <section className="energy">
             <h2>
               今日能量{" "}
