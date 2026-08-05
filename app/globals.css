@@ -2524,6 +2524,164 @@ nav .illustrated-icon {
   }
 }
 
+/* 首页信息层级：盆栽是第一视觉，记录入口保持一行快捷完成。 */
+.homehead + .plant {
+  height: clamp(306px, 43dvh, 370px);
+  margin: 12px 0 13px;
+}
+
+.homehead + .plant .stem {
+  height: 154px;
+}
+
+.homehead + .plant .branch-one { bottom: 157px; }
+.homehead + .plant .branch-two { bottom: 184px; }
+.homehead + .plant .leaf { bottom: 162px; }
+.homehead + .plant .l2 { bottom: 190px; }
+.homehead + .plant .l3 { bottom: 226px; }
+.homehead + .plant .l4 { bottom: 238px; }
+.homehead + .plant .flower { bottom: 254px; }
+
+.sectiontitle {
+  margin: 0 2px 7px;
+  font-size: 14px;
+}
+
+.quick-actions {
+  gap: 7px;
+}
+
+.quick-actions .action {
+  min-height: 78px;
+  padding: 7px 5px 8px;
+  gap: 4px;
+  border-radius: 18px;
+}
+
+.quick-actions .action > .illustrated-icon {
+  width: 38px;
+  height: 38px;
+}
+
+.quick-actions .action b {
+  font-size: 11px;
+}
+
+.quick-actions .action i {
+  right: 7px;
+  top: 5px;
+  font-size: 11px;
+}
+
+.homehead ~ .energy {
+  margin-top: 13px;
+}
+
+.energy h2 {
+  margin-bottom: 7px;
+  font-size: 14px;
+}
+
+.energy > div {
+  padding: 10px 4px;
+  border-radius: 18px;
+}
+
+.energy b {
+  font-size: 13px;
+}
+
+/* 趋势只保留真正需要回看的三类信息，减少纵向占用。 */
+.real-trend {
+  padding: 13px;
+  margin-bottom: 8px;
+}
+
+.real-trend .blood-chart,
+.real-trend .metric-chart {
+  height: 108px;
+  margin-top: 8px;
+}
+
+.real-trend .blood-day,
+.real-trend .metric-day {
+  height: 100px;
+  grid-template-rows: 80px 16px;
+}
+
+.real-trend .blood-bars {
+  height: 76px;
+}
+
+.trend-detail > div {
+  grid-template-columns: 1fr;
+}
+
+.trend + .calendar,
+.metric-trend + .calendar {
+  margin-top: 16px;
+}
+
+/* AI 设置默认折叠，避免“我的”页面被技术配置淹没。 */
+.settings {
+  gap: 0;
+  padding: 0;
+  overflow: hidden;
+}
+
+.ai-settings-toggle {
+  width: 100%;
+  min-height: 70px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 14px 15px !important;
+  background: transparent;
+  text-align: left !important;
+}
+
+.ai-settings-toggle > span {
+  display: grid;
+  gap: 5px;
+  min-width: 0;
+}
+
+.ai-settings-toggle b {
+  color: #f2eee6;
+  font-size: 14px;
+}
+
+.ai-settings-toggle small {
+  overflow: hidden;
+  color: #a5a79e;
+  font-size: 11px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ai-settings-toggle i {
+  flex: 0 0 auto;
+  color: #d5a65d;
+  font-size: 12px;
+  font-style: normal;
+}
+
+.ai-settings-body {
+  display: grid;
+  gap: 10px;
+  padding: 0 15px 15px;
+  border-top: 1px solid #2c322c;
+}
+
+.ai-settings-body label:first-child {
+  margin-top: 13px;
+}
+
+.ai-settings-body em {
+  margin-top: 2px;
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,

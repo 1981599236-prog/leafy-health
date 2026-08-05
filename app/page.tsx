@@ -344,7 +344,8 @@ export default function Page() {
     [isRecognizing, setIsRecognizing] = useState(false),
     [aiConfig, setAiConfig] = useState<AiConfig>(emptyAiConfig),
     [aiConfigLoading, setAiConfigLoading] = useState(false),
-    [aiConfigSaving, setAiConfigSaving] = useState(false);
+    [aiConfigSaving, setAiConfigSaving] = useState(false),
+    [aiSettingsOpen, setAiSettingsOpen] = useState(false);
   const savedBlood = useRef("");
   const now = new Date();
   const dayStart = new Date(
@@ -1176,13 +1177,6 @@ export default function Page() {
               <Stat label="热量差" value={intake ? balance : "—"} />
             </div>
           </section>
-          <Calendar
-            checked={checked}
-            days={days}
-            blanks={blanks}
-            month={now.getMonth() + 1}
-            today={now.getDate()}
-          />
         </section>
       )}
       {view === "blood" && (
@@ -1841,30 +1835,9 @@ export default function Page() {
                   </b>
                   <em>mmHg</em>
                 </span>
-                <span>
-                  <small>心率</small>
-                  <b>{selectedBlood.record.heart_rate ?? "—"}</b>
-                  <em>bpm</em>
-                </span>
               </div>
             </section>
           )}
-          <MetricTrend
-            title="心率趋势"
-            points={bloodTrendDays.map((day) => ({
-              ...day,
-              value: Number(day.record?.heart_rate ?? 0),
-              hasValue: day.record?.heart_rate != null,
-            }))}
-            unit="bpm"
-            note="记录心率后显示"
-          />
-          <MetricTrend
-            title="摄入热量"
-            points={foodTrend}
-            unit="kcal"
-            note="记录饮食后显示"
-          />
           <MetricTrend
             title="运动消耗"
             points={exerciseTrend}
@@ -1876,6 +1849,13 @@ export default function Page() {
             points={balanceTrend}
             unit="kcal"
             note="完成记录后显示"
+          />
+          <Calendar
+            checked={checked}
+            days={days}
+            blanks={blanks}
+            month={now.getMonth() + 1}
+            today={now.getDate()}
           />
         </section>
       )}
@@ -1912,76 +1892,90 @@ export default function Page() {
             <small>基于你的档案和日常活动计算</small>
           </div>
           <div className="card settings">
-            <b>✦　AI 识别模型</b>
-            <small>
-              {aiConfigLoading
-                ? "正在读取已保存的配置…"
-                : aiConfig.configured
-                  ? `已连接 · ${aiConfig.providerName} · 密钥末尾 ${aiConfig.keyHint}`
-                  : "尚未连接模型"}
-            </small>
-            <label>
-              服务商名称
-              <input
-                value={aiConfig.providerName}
-                placeholder="例如：硅基流动"
-                onChange={(event) =>
-                  setAiConfig((value) => ({
-                    ...value,
-                    providerName: event.target.value,
-                  }))
-                }
-              />
-            </label>
-            <label>
-              API 链接
-              <input
-                value={aiConfig.baseUrl}
-                placeholder="https://example.com/v1"
-                inputMode="url"
-                onChange={(event) =>
-                  setAiConfig((value) => ({ ...value, baseUrl: event.target.value }))
-                }
-              />
-            </label>
-            <label>
-              模型名称
-              <input
-                value={aiConfig.modelName}
-                placeholder="例如：model-name"
-                onChange={(event) =>
-                  setAiConfig((value) => ({ ...value, modelName: event.target.value }))
-                }
-              />
-            </label>
-            <label>
-              {aiConfig.configured ? "API Key（已安全保存）" : "API Key"}
-              <input
-                type="password"
-                value={aiConfig.apiKey}
-                autoComplete="off"
-                placeholder={
-                  aiConfig.configured
-                    ? "已加密保存；留空即可继续使用当前 Key"
-                    : "首次保存时必填"
-                }
-                onChange={(event) =>
-                  setAiConfig((value) => ({ ...value, apiKey: event.target.value }))
-                }
-              />
-            </label>
             <button
-              className="ai-save"
-              disabled={aiConfigSaving || aiConfigLoading}
-              onClick={saveAiConfig}
+              type="button"
+              className="ai-settings-toggle"
+              aria-expanded={aiSettingsOpen}
+              onClick={() => setAiSettingsOpen((open) => !open)}
             >
-              {aiConfigSaving ? "正在安全保存…" : "保存 AI 设置"}
+              <span>
+                <b>✦　AI 识别模型</b>
+                <small>
+                  {aiConfigLoading
+                    ? "正在读取已保存的配置…"
+                    : aiConfig.configured
+                      ? `已连接 · ${aiConfig.providerName} · 密钥末尾 ${aiConfig.keyHint}`
+                      : "尚未连接模型"}
+                </small>
+              </span>
+              <i>{aiSettingsOpen ? "收起" : "配置"}</i>
             </button>
-            <em>
-              {aiConfig.configured
-                ? "当前 Key 已加密保存在腾讯云，网页不会显示完整内容，也无需每次重新填写。"
-                : "API Key 只会加密保存在腾讯云，网页不会显示它。"}
-            </em>
+            {aiSettingsOpen && (
+              <div className="ai-settings-body">
+                <label>
+                  服务商名称
+                  <input
+                    value={aiConfig.providerName}
+                    placeholder="例如：硅基流动"
+                    onChange={(event) =>
+                      setAiConfig((value) => ({
+                        ...value,
+                        providerName: event.target.value,
+                      }))
+                    }
+                  />
+                </label>
+                <label>
+                  API 链接
+                  <input
+                    value={aiConfig.baseUrl}
+                    placeholder="https://example.com/v1"
+                    inputMode="url"
+                    onChange={(event) =>
+                      setAiConfig((value) => ({ ...value, baseUrl: event.target.value }))
+                    }
+                  />
+                </label>
+                <label>
+                  模型名称
+                  <input
+                    value={aiConfig.modelName}
+                    placeholder="例如：model-name"
+                    onChange={(event) =>
+                      setAiConfig((value) => ({ ...value, modelName: event.target.value }))
+                    }
+                  />
+                </label>
+                <label>
+                  {aiConfig.configured ? "API Key（已安全保存）" : "API Key"}
+                  <input
+                    type="password"
+                    value={aiConfig.apiKey}
+                    autoComplete="off"
+                    placeholder={
+                      aiConfig.configured
+                        ? "已加密保存；留空即可继续使用当前 Key"
+                        : "首次保存时必填"
+                    }
+                    onChange={(event) =>
+                      setAiConfig((value) => ({ ...value, apiKey: event.target.value }))
+                    }
+                  />
+                </label>
+                <button
+                  className="ai-save"
+                  disabled={aiConfigSaving || aiConfigLoading}
+                  onClick={saveAiConfig}
+                >
+                  {aiConfigSaving ? "正在安全保存…" : "保存 AI 设置"}
+                </button>
+                <em>
+                  {aiConfig.configured
+                    ? "当前 Key 已加密保存在腾讯云，网页不会显示完整内容，也无需每次重新填写。"
+                    : "API Key 只会加密保存在腾讯云，网页不会显示它。"}
+                </em>
+              </div>
+            )}
           </div>
           <button className="logout" onClick={() => supabase.auth.signOut()}>
             退出登录
@@ -2125,7 +2119,7 @@ function BloodTrend({
       <div className="trend-heading">
         <div>
           <h2>血压趋势</h2>
-          <small>点击有记录的日期，查看血压和心率</small>
+          <small>点击有记录的日期，查看当天血压</small>
         </div>
         <span>收 / 舒</span>
       </div>
@@ -2138,7 +2132,7 @@ function BloodTrend({
             onClick={() => day.record && onSelect(day.key)}
             aria-label={
               day.record
-                ? `${day.label}：${day.record.systolic}/${day.record.diastolic}，心率 ${day.record.heart_rate ?? "未记录"}`
+                ? `${day.label}：${day.record.systolic}/${day.record.diastolic}`
                 : `${day.label}：未记录`
             }
           >
