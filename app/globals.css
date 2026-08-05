@@ -2591,6 +2591,274 @@ nav .illustrated-icon {
   font-size: 13px;
 }
 
+/* Full-screen bonsai home: background and ground stay fixed; collectible elements keep their own layer metadata. */
+.home-page {
+  --drawer-height: min(394px, 48dvh);
+  position: relative;
+  min-height: calc(100dvh - 78px);
+  padding: 0;
+  overflow: hidden;
+  background: #d8d5c4;
+}
+
+.home-page .home-scene-head {
+  position: absolute;
+  z-index: 12;
+  top: 0;
+  right: 0;
+  left: 0;
+  padding: max(18px, env(safe-area-inset-top)) 20px 0;
+  pointer-events: none;
+}
+
+.home-page .home-scene-head > * {
+  pointer-events: auto;
+}
+
+.home-page .homehead p {
+  margin-bottom: 4px;
+  color: #5c5d4d;
+  font-family: "Arial Narrow", "Aptos Display", "PingFang SC", sans-serif;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: .12em;
+}
+
+.home-page .homehead h1 {
+  color: #27291f;
+  font-family: "Arial Narrow", "Aptos Display", "PingFang SC", sans-serif;
+  font-size: clamp(28px, 8vw, 38px);
+  font-weight: 850;
+  letter-spacing: -.085em;
+  line-height: .94;
+}
+
+.home-page .homehead > div > span {
+  display: none;
+}
+
+.home-page .avatar {
+  width: 38px;
+  height: 38px;
+  border-color: #c7c3ad;
+  border-radius: 8px;
+  background: #efeddf;
+  color: #343529;
+  box-shadow: none;
+}
+
+.home-page .plant {
+  height: calc(100dvh - 78px);
+  min-height: 610px;
+  margin: 0;
+  border: 0;
+  border-radius: 0;
+  background:
+    radial-gradient(circle at 72% 18%, #f6f0cb 0 1px, transparent 2px),
+    radial-gradient(circle at 33% 17%, #dfe8bd 0 1px, transparent 2px),
+    linear-gradient(150deg, #b6bd98 0%, #d9d7c2 48%, #aeb692 100%);
+  box-shadow: none;
+}
+
+.home-page .plant::before {
+  z-index: 0;
+  background:
+    radial-gradient(circle at 72% 17%, #f3e7ad 0 9%, transparent 9.3%),
+    linear-gradient(180deg, transparent 44%, #8e9873aa 100%);
+  opacity: .92;
+}
+
+.plant-scene-toggle {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  padding: 0;
+  overflow: hidden;
+  background: transparent;
+  text-align: initial;
+}
+
+.plant-scene-toggle:focus-visible {
+  outline: 3px solid #d7ad32;
+  outline-offset: -7px;
+}
+
+.home-page .plant-moon {
+  z-index: 1;
+  top: 13.5%;
+  right: 11%;
+  width: clamp(92px, 24vw, 128px);
+  height: clamp(92px, 24vw, 128px);
+  background: #f0e4aa;
+  box-shadow: 0 0 60px #fff4b066;
+}
+
+.home-page .plant-haze {
+  z-index: 2;
+  bottom: 15%;
+  height: 112px;
+  background: #e7e3c78c;
+  filter: blur(20px);
+}
+
+.home-page .plant-hill {
+  z-index: 3;
+  bottom: -30px;
+  background: #657157;
+}
+
+.home-page .hill-one { left: -82px; width: 340px; height: 158px; }
+.home-page .hill-two { right: -108px; width: 380px; height: 178px; background: #4f5d4a; }
+
+.home-page .stem,
+.home-page .leaf,
+.home-page .flower,
+.home-page .branch,
+.home-page .pot,
+.home-page .pot-rim { z-index: 6; }
+
+.home-page .stem { bottom: 20%; height: 205px; width: 11px; background: linear-gradient(90deg, #40503b, #93a16c 54%, #314333); }
+.home-page .branch-one { bottom: 39%; left: calc(50% - 100px); width: 105px; }
+.home-page .branch-two { bottom: 45%; width: 92px; }
+.home-page .leaf { bottom: 40%; left: calc(50% - 93px); width: 108px; height: 58px; }
+.home-page .l2 { bottom: 47%; }
+.home-page .l3 { bottom: 54%; }
+.home-page .l4 { bottom: 57%; }
+.home-page .flower { bottom: 61%; }
+.home-page .pot-rim { bottom: 14%; width: 152px; height: 23px; left: calc(50% - 76px); background: #b78c52; box-shadow: inset 0 -7px 0 #785a38; }
+.home-page .pot { bottom: 4%; width: 132px; height: 94px; left: calc(50% - 66px); background: linear-gradient(90deg, #79583e, #c79a61 52%, #76543a); }
+
+.home-page .plant-label {
+  z-index: 9;
+  left: 20px;
+  bottom: 14%;
+  display: grid;
+  gap: 4px;
+  max-width: 180px;
+  color: #273124;
+}
+
+.home-page .plant-label b {
+  font-family: "Arial Narrow", "Aptos Display", "PingFang SC", sans-serif;
+  font-size: 20px;
+  font-weight: 850;
+  letter-spacing: -.06em;
+}
+
+.home-page .plant-label span { color: #586150; font-size: 11px; }
+
+.bonsai-element {
+  position: absolute;
+  z-index: 5;
+  left: var(--bonsai-x);
+  top: var(--bonsai-y);
+  width: 48px;
+  height: 48px;
+  transform: translate(-50%, -50%) rotate(var(--bonsai-rotation)) scale(var(--bonsai-scale));
+  transform-origin: center;
+  pointer-events: none;
+}
+
+.bonsai-layer-far { z-index: 2; filter: saturate(.7) brightness(.82) blur(.55px); opacity: .64; }
+.bonsai-layer-middle { z-index: 5; filter: saturate(.96); opacity: 1; }
+.bonsai-layer-near { z-index: 8; filter: saturate(.9) brightness(1.04) blur(.25px); opacity: .9; }
+
+.bonsai-mist { width: 145px; height: 50px; border-radius: 50%; background: #f0edcf96; filter: blur(11px); }
+.bonsai-stone { width: 44px; height: 27px; border-radius: 62% 44% 48% 52%; background: linear-gradient(140deg, #8d927a, #5e6754); box-shadow: inset 7px 6px 0 #d7d6bd30; }
+.bonsai-lantern { width: 22px; height: 45px; border-radius: 4px 4px 8px 8px; background: linear-gradient(90deg, #4f5544, #7c8060, #424a3b); box-shadow: 0 8px 0 -7px #3d4536; }
+.bonsai-lantern::before { content: ""; position: absolute; top: -7px; left: -4px; width: 30px; height: 8px; border-radius: 4px; background: #3e4737; }
+.bonsai-lantern::after { content: ""; position: absolute; left: 6px; top: 11px; width: 10px; height: 12px; border-radius: 5px; background: #f2d976; box-shadow: 0 0 15px #f7df745c; }
+.bonsai-fireflies { width: 68px; height: 58px; background: radial-gradient(circle at 20% 30%, #fff2a8 0 2px, transparent 3px), radial-gradient(circle at 72% 35%, #f9df79 0 2px, transparent 3px), radial-gradient(circle at 48% 72%, #fff4a7 0 2px, transparent 3px); filter: drop-shadow(0 0 6px #ffec8e); }
+.bonsai-shrub { width: 58px; height: 38px; border-radius: 54% 46% 42% 48%; background: radial-gradient(circle at 26% 48%, #899e5d 0 22%, transparent 23%), radial-gradient(circle at 54% 30%, #6f894f 0 30%, transparent 31%), radial-gradient(circle at 74% 58%, #557043 0 29%, transparent 30%); }
+
+.task-drawer-handle {
+  position: absolute;
+  z-index: 15;
+  right: 16px;
+  bottom: 18px;
+  left: 16px;
+  min-height: 54px;
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  align-items: center;
+  gap: 10px;
+  padding: 0 17px;
+  border: 1px solid #d0cdb5;
+  border-radius: 9px;
+  background: #efeddf;
+  color: #25271f;
+  box-shadow: 0 14px 24px #4e57452b;
+  text-align: left;
+  transition: bottom .34s cubic-bezier(.2,.8,.2,1), background .2s ease;
+}
+
+.task-drawer-handle span { font-family: "Arial Narrow", "Aptos Display", "PingFang SC", sans-serif; font-size: 16px; font-weight: 850; letter-spacing: -.04em; }
+.task-drawer-handle b { font-size: 12px; color: #6e775e; }
+.task-drawer-handle i { padding-left: 10px; border-left: 1px solid #d4d0b8; color: #34372b; font-size: 11px; font-style: normal; }
+.task-drawer-handle:active { transform: scale(.985); }
+
+.task-drawer {
+  position: absolute;
+  z-index: 14;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  height: var(--drawer-height);
+  padding: 44px 16px 18px;
+  overflow-y: auto;
+  border-top: 1px solid #cfccb6;
+  border-radius: 18px 18px 0 0;
+  background: #efeddf;
+  color: #25271f;
+  box-shadow: 0 -15px 38px #37403222;
+  transform: translateY(101%);
+  transition: transform .34s cubic-bezier(.2,.8,.2,1);
+}
+
+.tasks-open .task-drawer { transform: translateY(0); }
+.tasks-open .task-drawer-handle { bottom: calc(var(--drawer-height) - 25px); background: #e5e2ce; }
+
+.task-drawer .sectiontitle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 0 0 12px;
+  color: #282a21;
+  font-family: "Arial Narrow", "Aptos Display", "PingFang SC", sans-serif;
+  font-size: 19px;
+  font-weight: 850;
+  letter-spacing: -.055em;
+}
+
+.task-drawer .sectiontitle i { border-radius: 6px; background: #dfe5c8; color: #52603e; font-size: 11px; font-style: normal; }
+
+.task-drawer .quick-actions { gap: 8px; }
+.task-drawer .quick-actions .action { min-height: 100px; border-color: #d0cdb8; border-radius: 9px; background: #f8f6ea; color: #292b23; }
+.task-drawer .quick-actions .action b { color: #303228; }
+.task-drawer .quick-actions .action > span { border-radius: 8px; background: #e9e4c8; border-color: #d5cfaa; }
+.task-drawer .quick-actions .action:nth-child(2) > span { background: #e4ebd1; border-color: #cbd7ad; }
+.task-drawer .quick-actions .action:nth-child(3) > span { background: #dfe7e0; border-color: #c8d4c9; }
+.task-drawer .quick-actions .action i { color: #839650; }
+.task-drawer .energy { margin-top: 14px; }
+.task-drawer .energy h2 { color: #34362c; }
+.task-drawer .energy > div { border-color: #d3d0bb; border-radius: 9px; background: #e4e1cf; }
+.task-drawer .energy b { color: #34362c; }
+.task-drawer .energy small, .task-drawer .energy i { color: #6a705f; }
+
+@media (max-height: 690px) {
+  .home-page { --drawer-height: min(360px, 53dvh); }
+  .home-page .plant { min-height: 520px; }
+  .home-page .plant-label { bottom: 13%; }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .bonsai-fireflies { animation: firefly-drift 4.5s ease-in-out infinite alternate; }
+  .home-page .bonsai-mist { animation: mist-drift 8s ease-in-out infinite alternate; }
+}
+
+@keyframes firefly-drift { from { transform: translate(-50%, -50%) rotate(var(--bonsai-rotation)) scale(var(--bonsai-scale)); } to { transform: translate(calc(-50% + 7px), calc(-50% - 5px)) rotate(var(--bonsai-rotation)) scale(var(--bonsai-scale)); } }
+@keyframes mist-drift { from { margin-left: -4px; } to { margin-left: 8px; } }
+
 /* 趋势只保留真正需要回看的三类信息，减少纵向占用。 */
 .real-trend {
   padding: 13px;

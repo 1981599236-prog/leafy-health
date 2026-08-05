@@ -1,6 +1,6 @@
 "use client";
 
-import { ChangeEvent, useEffect, useMemo, useRef, useState } from "react";
+import { ChangeEvent, useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import { cloudApp, cloudAuth, cloudDb } from "../lib/cloudbase";
 
 type View = "home" | "blood" | "food" | "exercise" | "trend" | "settings";
@@ -37,6 +37,17 @@ type GymTemplate = {
   name: string;
   duration_minutes: number;
   movements: GymMovement[];
+};
+type BonsaiLayer = "far" | "middle" | "near";
+type BonsaiElementKind = "mist" | "stone" | "lantern" | "fireflies" | "shrub";
+type BonsaiElement = {
+  id: string;
+  kind: BonsaiElementKind;
+  layer: BonsaiLayer;
+  x: number;
+  y: number;
+  scale: number;
+  rotation: number;
 };
 type Blood = { systolic: string; diastolic: string; heart_rate: string };
 type BloodRecord = {
@@ -99,6 +110,16 @@ const defaultExercises: ExercisePreset[] = [
     met: 4.5,
   },
   { activity_type: "骑车", emoji: "🚲", duration_minutes: 30, met: 6.8 },
+];
+// 背景与地面固定；每个可收集元素自己保存层级、位置、缩放和旋转。
+// 后续解锁时只随机一次，再同步到云端，刷新页面不会改变构图。
+const starterBonsaiElements: BonsaiElement[] = [
+  { id: "mist-left", kind: "mist", layer: "far", x: 10, y: 54, scale: 1.15, rotation: -3 },
+  { id: "mist-right", kind: "mist", layer: "near", x: 78, y: 64, scale: 0.78, rotation: 4 },
+  { id: "river-stone", kind: "stone", layer: "middle", x: 76, y: 74, scale: 0.9, rotation: -8 },
+  { id: "garden-lantern", kind: "lantern", layer: "far", x: 18, y: 63, scale: 0.72, rotation: 0 },
+  { id: "night-fireflies", kind: "fireflies", layer: "near", x: 69, y: 30, scale: 1, rotation: 0 },
+  { id: "moss-shrub", kind: "shrub", layer: "middle", x: 30, y: 71, scale: 0.82, rotation: 0 },
 ];
 const cloneTemplate = (template: GymTemplate): GymTemplate => ({
   ...template,
@@ -199,13 +220,60 @@ const supabase = {
   },
 };
 
-function Plant({ growth }: { growth: number }) {
+function BonsaiElement({ item }: { item: BonsaiElement }) {
+  const style = {
+    "--bonsai-x": `${item.x}%`,
+    "--bonsai-y": `${item.y}%`,
+    "--bonsai-scale": item.scale,
+    "--bonsai-rotation": `${item.rotation}deg`,
+  } as CSSProperties;
+  return <span className={`bonsai-element bonsai-${item.kind} bonsai-layer-${item.layer}`} style={style} aria-hidden="true" />;
+}
+
+function Plant({
+  growth,
+  tasksOpen,
+  toggleTasks,
+}: {
+  growth: number;
+  tasksOpen: boolean;
+  toggleTasks: () => void;
+}) {
+  const touchStart = useRef<number | null>(null);
+  const skippedClick = useRef(false);
+  const handleTouchEnd = (endY: number) => {
+    const startY = touchStart.current;
+    touchStart.current = null;
+    if (startY === null || Math.abs(startY - endY) < 42) return;
+    skippedClick.current = true;
+    if (startY > endY && !tasksOpen) toggleTasks();
+    if (startY < endY && tasksOpen) toggleTasks();
+  };
   return (
-    <section className="plant">
+    <section className={`plant plant-immersive ${tasksOpen ? "is-open" : ""}`}>
+      <button
+        type="button"
+        className="plant-scene-toggle"
+        onClick={() => {
+          if (skippedClick.current) {
+            skippedClick.current = false;
+            return;
+          }
+          toggleTasks();
+        }}
+        onTouchStart={(event) => {
+          touchStart.current = event.touches[0]?.clientY ?? null;
+        }}
+        onTouchEnd={(event) => handleTouchEnd(event.changedTouches[0]?.clientY ?? 0)}
+        aria-expanded={tasksOpen}
+        aria-controls="today-tasks"
+        aria-label={tasksOpen ? "收起今天的任务" : "展开今天的任务"}
+      >
       <div className="plant-moon" />
       <div className="plant-haze" />
       <div className="plant-hill hill-one" />
       <div className="plant-hill hill-two" />
+      {starterBonsaiElements.map((item) => <BonsaiElement key={item.id} item={item} />)}
       <div className="leaf l1" />
       <div className="leaf l2" />
       {growth >= 30 && (
@@ -232,6 +300,7 @@ function Plant({ growth }: { growth: number }) {
         </b>
         <span>今日成长值 {growth}/90</span>
       </div>
+      </button>
     </section>
   );
 }
@@ -345,7 +414,8 @@ export default function Page() {
     [aiConfig, setAiConfig] = useState<AiConfig>(emptyAiConfig),
     [aiConfigLoading, setAiConfigLoading] = useState(false),
     [aiConfigSaving, setAiConfigSaving] = useState(false),
-    [aiSettingsOpen, setAiSettingsOpen] = useState(false);
+    [aiSettingsOpen, setAiSettingsOpen] = useState(false),
+    [tasksOpen, setTasksOpen] = useState(false);
   const savedBlood = useRef("");
   const now = new Date();
   const dayStart = new Date(
@@ -1106,8 +1176,8 @@ export default function Page() {
   return (
     <main className="shell app">
       {view === "home" && (
-        <section className="page">
-          <header className="homehead">
+        <section className={`page home-page ${tasksOpen ? "tasks-open" : ""}`}>
+          <header className="homehead home-scene-head">
             <div>
               <p>
                 {new Intl.DateTimeFormat("zh-CN", {
@@ -1123,7 +1193,23 @@ export default function Page() {
               {name}
             </button>
           </header>
-          <Plant growth={growth} />
+          <Plant
+            growth={growth}
+            tasksOpen={tasksOpen}
+            toggleTasks={() => setTasksOpen((open) => !open)}
+          />
+          <button
+            type="button"
+            className="task-drawer-handle"
+            onClick={() => setTasksOpen((open) => !open)}
+            aria-expanded={tasksOpen}
+            aria-controls="today-tasks"
+          >
+            <span>今天的三件事</span>
+            <b>{growth}/90</b>
+            <i>{tasksOpen ? "收起" : "展开"}</i>
+          </button>
+          <section id="today-tasks" className="task-drawer" aria-label="今天的记录任务">
           <h2 className="sectiontitle">
             今天，做这三件小事 <i>{growth}/90</i>
           </h2>
@@ -1176,6 +1262,7 @@ export default function Page() {
               <Stat label="消耗" value={totalOut} />
               <Stat label="热量差" value={intake ? balance : "—"} />
             </div>
+          </section>
           </section>
         </section>
       )}
