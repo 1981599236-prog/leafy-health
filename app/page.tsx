@@ -235,6 +235,26 @@ function Plant({ growth }: { growth: number }) {
     </section>
   );
 }
+
+type IllustrationKind = "blood" | "food" | "exercise" | "home" | "trend" | "profile";
+
+function IllustratedIcon({
+  kind,
+  size = "action",
+}: {
+  kind: IllustrationKind;
+  size?: "action" | "nav";
+}) {
+  return (
+    <span className={`illustrated-icon illustrated-icon-${kind} illustrated-icon-${size}`} aria-hidden="true">
+      <span className="illustrated-icon-shape" />
+      <span className="illustrated-icon-detail" />
+      {kind === "food" && <span className="illustrated-icon-leaf" />}
+      {kind === "trend" && <span className="illustrated-icon-sprout" />}
+    </span>
+  );
+}
+
 function Nav({ view, setView }: { view: View; setView: (v: View) => void }) {
   return (
     <nav>
@@ -242,19 +262,22 @@ function Nav({ view, setView }: { view: View; setView: (v: View) => void }) {
         className={view === "home" ? "active" : ""}
         onClick={() => setView("home")}
       >
-        ⌂<span>今日</span>
+        <IllustratedIcon kind="home" size="nav" />
+        <span>今日</span>
       </button>
       <button
         className={view === "trend" ? "active" : ""}
         onClick={() => setView("trend")}
       >
-        ⌁<span>趋势</span>
+        <IllustratedIcon kind="trend" size="nav" />
+        <span>趋势</span>
       </button>
       <button
         className={view === "settings" ? "active" : ""}
         onClick={() => setView("settings")}
       >
-        ☼<span>我的</span>
+        <IllustratedIcon kind="profile" size="nav" />
+        <span>我的</span>
       </button>
     </nav>
   );
@@ -1105,7 +1128,7 @@ export default function Page() {
           </h2>
           <div className="quick-actions">
             <Action
-              emoji="🩺"
+              icon="blood"
               title={bloodDone ? "血压已记录" : "记录血压"}
               detail={
                 bloodDone
@@ -1116,7 +1139,7 @@ export default function Page() {
               click={() => setView("blood")}
             />
             <Action
-              emoji="🍱"
+              icon="food"
               title={intake ? "饮食已记录" : "记录饮食"}
               detail={
                 intake ? `今日已摄入 ${intake} kcal` : "拍张照，剩下交给 AI"
@@ -1125,7 +1148,7 @@ export default function Page() {
               click={() => setView("food")}
             />
             <Action
-              emoji="🏃"
+              icon="exercise"
               title={exerciseTotal ? "运动已记录" : "记录运动"}
               detail={
                 latestExercise
@@ -1995,13 +2018,13 @@ function Choices({
   );
 }
 function Action({
-  emoji,
+  icon,
   title,
   detail,
   done,
   click,
 }: {
-  emoji: string;
+  icon: Extract<IllustrationKind, "blood" | "food" | "exercise">;
   title: string;
   detail: string;
   done: boolean;
@@ -2009,7 +2032,7 @@ function Action({
 }) {
   return (
     <button className="action" onClick={click}>
-      <span>{emoji}</span>
+      <IllustratedIcon kind={icon} />
       <div>
         <b>{title}</b>
         <small>{detail}</small>

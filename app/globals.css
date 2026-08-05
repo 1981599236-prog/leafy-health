@@ -2288,6 +2288,242 @@ nav .active {
   }
 }
 
+/* 手绘器物图标：统一承接首页动作和底部导航，不依赖系统 Emoji。 */
+.illustrated-icon {
+  position: relative;
+  display: inline-block;
+  flex: 0 0 auto;
+  color: #e1b66b;
+}
+
+.illustrated-icon-action {
+  width: 52px;
+  height: 52px;
+}
+
+.illustrated-icon-nav {
+  width: 24px;
+  height: 24px;
+  margin-bottom: -1px;
+}
+
+.illustrated-icon span {
+  position: absolute;
+  display: block;
+  box-sizing: border-box;
+}
+
+.illustrated-icon-blood .illustrated-icon-shape {
+  inset: 11px 8px 8px;
+  border: 2px solid currentColor;
+  border-radius: 50% 50% 45% 45%;
+  transform: rotate(-8deg);
+}
+
+.illustrated-icon-blood .illustrated-icon-shape::before {
+  content: "";
+  position: absolute;
+  width: 13px;
+  height: 7px;
+  border: 2px solid currentColor;
+  border-radius: 5px;
+  right: -8px;
+  top: 13px;
+  transform: rotate(22deg);
+}
+
+.illustrated-icon-blood .illustrated-icon-detail {
+  width: 2px;
+  height: 13px;
+  left: 25px;
+  top: 20px;
+  border-radius: 4px;
+  background: currentColor;
+  transform: rotate(38deg);
+  transform-origin: bottom center;
+}
+
+.illustrated-icon-food .illustrated-icon-shape {
+  width: 34px;
+  height: 17px;
+  left: 9px;
+  top: 23px;
+  border: 2px solid currentColor;
+  border-top: 0;
+  border-radius: 0 0 18px 18px;
+}
+
+.illustrated-icon-food .illustrated-icon-shape::before {
+  content: "";
+  position: absolute;
+  width: 32px;
+  height: 9px;
+  left: -1px;
+  top: -5px;
+  border: 2px solid currentColor;
+  border-radius: 50%;
+}
+
+.illustrated-icon-food .illustrated-icon-detail {
+  width: 2px;
+  height: 20px;
+  left: 25px;
+  top: 8px;
+  border-radius: 4px;
+  background: currentColor;
+  transform: rotate(-24deg);
+}
+
+.illustrated-icon-food .illustrated-icon-leaf {
+  width: 12px;
+  height: 8px;
+  left: 17px;
+  top: 10px;
+  border: 2px solid currentColor;
+  border-radius: 100% 0 100% 0;
+  transform: rotate(-26deg);
+}
+
+.illustrated-icon-exercise .illustrated-icon-shape {
+  width: 34px;
+  height: 8px;
+  left: 9px;
+  top: 23px;
+  border: 2px solid currentColor;
+  border-radius: 6px;
+}
+
+.illustrated-icon-exercise .illustrated-icon-shape::before,
+.illustrated-icon-exercise .illustrated-icon-shape::after {
+  content: "";
+  position: absolute;
+  width: 7px;
+  height: 18px;
+  top: -7px;
+  border: 2px solid currentColor;
+  border-radius: 4px;
+}
+
+.illustrated-icon-exercise .illustrated-icon-shape::before { left: -9px; }
+.illustrated-icon-exercise .illustrated-icon-shape::after { right: -9px; }
+
+.illustrated-icon-exercise .illustrated-icon-detail {
+  width: 3px;
+  height: 3px;
+  left: 24px;
+  top: 25px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.illustrated-icon-home .illustrated-icon-shape {
+  width: 15px;
+  height: 13px;
+  left: 4px;
+  top: 8px;
+  border: 1.7px solid currentColor;
+  border-radius: 3px 3px 4px 4px;
+}
+
+.illustrated-icon-home .illustrated-icon-shape::before {
+  content: "";
+  position: absolute;
+  width: 11px;
+  height: 11px;
+  left: 0;
+  top: -7px;
+  border-top: 1.7px solid currentColor;
+  border-left: 1.7px solid currentColor;
+  transform: rotate(45deg);
+}
+
+.illustrated-icon-home .illustrated-icon-detail {
+  width: 3px;
+  height: 6px;
+  left: 10px;
+  top: 15px;
+  border: 1.5px solid currentColor;
+  border-bottom: 0;
+  border-radius: 2px 2px 0 0;
+}
+
+.illustrated-icon-trend .illustrated-icon-shape {
+  width: 17px;
+  height: 12px;
+  left: 3px;
+  top: 8px;
+  border-left: 1.7px solid currentColor;
+  border-bottom: 1.7px solid currentColor;
+  border-radius: 0 0 0 4px;
+}
+
+.illustrated-icon-trend .illustrated-icon-detail {
+  width: 14px;
+  height: 2px;
+  left: 6px;
+  top: 14px;
+  border-radius: 3px;
+  background: currentColor;
+  transform: rotate(-30deg);
+}
+
+.illustrated-icon-trend .illustrated-icon-sprout {
+  width: 7px;
+  height: 7px;
+  right: 2px;
+  top: 5px;
+  border-top: 1.7px solid currentColor;
+  border-right: 1.7px solid currentColor;
+  transform: rotate(28deg);
+}
+
+.illustrated-icon-profile .illustrated-icon-shape {
+  width: 12px;
+  height: 12px;
+  left: 6px;
+  top: 3px;
+  border: 1.7px solid currentColor;
+  border-radius: 50%;
+}
+
+.illustrated-icon-profile .illustrated-icon-detail {
+  width: 18px;
+  height: 10px;
+  left: 3px;
+  top: 14px;
+  border: 1.7px solid currentColor;
+  border-bottom: 0;
+  border-radius: 11px 11px 0 0;
+}
+
+.quick-actions .illustrated-icon {
+  border: 1px solid #524733;
+  border-radius: 50%;
+  background: #282216;
+}
+
+.quick-actions .action:nth-child(2) .illustrated-icon {
+  color: #a7ca79;
+  border-color: #4e5940;
+  background: #1b241a;
+}
+
+.quick-actions .action:nth-child(3) .illustrated-icon {
+  color: #8ac5cf;
+  border-color: #414e50;
+  background: #172124;
+}
+
+nav .illustrated-icon {
+  color: currentColor;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .action:hover .illustrated-icon-action {
+    transform: translateY(-2px) rotate(-3deg);
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
