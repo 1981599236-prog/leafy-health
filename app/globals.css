@@ -2859,6 +2859,32 @@ nav .illustrated-icon {
 @keyframes firefly-drift { from { transform: translate(-50%, -50%) rotate(var(--bonsai-rotation)) scale(var(--bonsai-scale)); } to { transform: translate(calc(-50% + 7px), calc(-50% - 5px)) rotate(var(--bonsai-rotation)) scale(var(--bonsai-scale)); } }
 @keyframes mist-drift { from { margin-left: -4px; } to { margin-left: 8px; } }
 
+/* 横向盆景画框：为 16:9 背景和后续可摆放元素预留稳定构图。 */
+.homehead + .plant {
+  height: auto;
+  min-height: 0;
+  aspect-ratio: 16 / 9;
+  margin: 14px 0 16px;
+}
+
+.homehead + .plant .stem { height: 96px; bottom: 23px; }
+.homehead + .plant .branch-one { bottom: 94px; left: calc(50% - 67px); width: 72px; }
+.homehead + .plant .branch-two { bottom: 114px; width: 64px; }
+.homehead + .plant .leaf { bottom: 99px; left: calc(50% - 64px); width: 70px; height: 37px; }
+.homehead + .plant .l2 { bottom: 121px; }
+.homehead + .plant .l3 { bottom: 143px; }
+.homehead + .plant .l4 { bottom: 151px; }
+.homehead + .plant .flower { bottom: 166px; }
+.homehead + .plant .pot-rim { bottom: 35px; }
+.homehead + .plant .pot { height: 54px; }
+.homehead + .plant .plant-label { bottom: 14px; }
+
+.homehead + .plant .bonsai-mist { width: 104px; height: 38px; }
+
+@media (max-width: 360px) {
+  .homehead + .plant { aspect-ratio: 1.62 / 1; }
+}
+
 /* 趋势只保留真正需要回看的三类信息，减少纵向占用。 */
 .real-trend {
   padding: 13px;

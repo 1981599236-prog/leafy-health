@@ -230,45 +230,9 @@ function BonsaiElement({ item }: { item: BonsaiElement }) {
   return <span className={`bonsai-element bonsai-${item.kind} bonsai-layer-${item.layer}`} style={style} aria-hidden="true" />;
 }
 
-function Plant({
-  growth,
-  tasksOpen,
-  toggleTasks,
-}: {
-  growth: number;
-  tasksOpen: boolean;
-  toggleTasks: () => void;
-}) {
-  const touchStart = useRef<number | null>(null);
-  const skippedClick = useRef(false);
-  const handleTouchEnd = (endY: number) => {
-    const startY = touchStart.current;
-    touchStart.current = null;
-    if (startY === null || Math.abs(startY - endY) < 42) return;
-    skippedClick.current = true;
-    if (startY > endY && !tasksOpen) toggleTasks();
-    if (startY < endY && tasksOpen) toggleTasks();
-  };
+function Plant({ growth }: { growth: number }) {
   return (
-    <section className={`plant plant-immersive ${tasksOpen ? "is-open" : ""}`}>
-      <button
-        type="button"
-        className="plant-scene-toggle"
-        onClick={() => {
-          if (skippedClick.current) {
-            skippedClick.current = false;
-            return;
-          }
-          toggleTasks();
-        }}
-        onTouchStart={(event) => {
-          touchStart.current = event.touches[0]?.clientY ?? null;
-        }}
-        onTouchEnd={(event) => handleTouchEnd(event.changedTouches[0]?.clientY ?? 0)}
-        aria-expanded={tasksOpen}
-        aria-controls="today-tasks"
-        aria-label={tasksOpen ? "收起今天的任务" : "展开今天的任务"}
-      >
+    <section className="plant">
       <div className="plant-moon" />
       <div className="plant-haze" />
       <div className="plant-hill hill-one" />
@@ -300,7 +264,6 @@ function Plant({
         </b>
         <span>今日成长值 {growth}/90</span>
       </div>
-      </button>
     </section>
   );
 }
@@ -414,8 +377,7 @@ export default function Page() {
     [aiConfig, setAiConfig] = useState<AiConfig>(emptyAiConfig),
     [aiConfigLoading, setAiConfigLoading] = useState(false),
     [aiConfigSaving, setAiConfigSaving] = useState(false),
-    [aiSettingsOpen, setAiSettingsOpen] = useState(false),
-    [tasksOpen, setTasksOpen] = useState(false);
+    [aiSettingsOpen, setAiSettingsOpen] = useState(false);
   const savedBlood = useRef("");
   const now = new Date();
   const dayStart = new Date(
@@ -1176,8 +1138,8 @@ export default function Page() {
   return (
     <main className="shell app">
       {view === "home" && (
-        <section className={`page home-page ${tasksOpen ? "tasks-open" : ""}`}>
-          <header className="homehead home-scene-head">
+        <section className="page">
+          <header className="homehead">
             <div>
               <p>
                 {new Intl.DateTimeFormat("zh-CN", {
@@ -1193,23 +1155,7 @@ export default function Page() {
               {name}
             </button>
           </header>
-          <Plant
-            growth={growth}
-            tasksOpen={tasksOpen}
-            toggleTasks={() => setTasksOpen((open) => !open)}
-          />
-          <button
-            type="button"
-            className="task-drawer-handle"
-            onClick={() => setTasksOpen((open) => !open)}
-            aria-expanded={tasksOpen}
-            aria-controls="today-tasks"
-          >
-            <span>今天的三件事</span>
-            <b>{growth}/90</b>
-            <i>{tasksOpen ? "收起" : "展开"}</i>
-          </button>
-          <section id="today-tasks" className="task-drawer" aria-label="今天的记录任务">
+          <Plant growth={growth} />
           <h2 className="sectiontitle">
             今天，做这三件小事 <i>{growth}/90</i>
           </h2>
@@ -1262,7 +1208,6 @@ export default function Page() {
               <Stat label="消耗" value={totalOut} />
               <Stat label="热量差" value={intake ? balance : "—"} />
             </div>
-          </section>
           </section>
         </section>
       )}
