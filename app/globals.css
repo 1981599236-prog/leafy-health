@@ -3085,6 +3085,34 @@ nav .active .illustrated-icon-nav { filter: drop-shadow(0 2px 0 #f2c83d); }
   margin-top: 8px;
 }
 
+/* 任务入口直接展示插画本身，不再用圆形底框把图标切小。 */
+.quick-actions .action {
+  min-height: 106px;
+  padding: 9px 6px 10px;
+  gap: 6px;
+}
+
+.quick-actions .action > .illustrated-icon,
+.quick-actions .action > span.illustrated-icon {
+  width: min(74px, 76%);
+  height: 54px;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  overflow: visible;
+}
+
+.quick-actions .action:nth-child(2) > .illustrated-icon,
+.quick-actions .action:nth-child(3) > .illustrated-icon {
+  border-color: transparent;
+  background: transparent;
+}
+
+.quick-actions .action > .illustrated-icon img {
+  width: 108%;
+  height: 108%;
+}
+
 .real-trend .blood-day,
 .real-trend .metric-day {
   height: 100px;
