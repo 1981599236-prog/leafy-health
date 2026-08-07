@@ -271,10 +271,11 @@ function Plant({ growth }: { growth: number }) {
 type IllustrationKind = "blood" | "food" | "exercise" | "home" | "trend" | "profile";
 
 const illustratedAsset: Partial<Record<IllustrationKind, string>> = {
-  blood: "/ui-icons/blood-pressure.png",
-  food: "/ui-icons/food-plate.png",
-  exercise: "/ui-icons/exercise-dumbbell.png",
-  trend: "/ui-icons/trend-chart.png",
+  blood: "/ui-icons/blood-illustration.png",
+  food: "/ui-icons/food-illustration.png",
+  exercise: "/ui-icons/exercise-illustration.png",
+  home: "/ui-icons/home-illustration.png",
+  trend: "/ui-icons/trend-illustration.png",
 };
 
 function IllustratedIcon({
