@@ -270,6 +270,13 @@ function Plant({ growth }: { growth: number }) {
 
 type IllustrationKind = "blood" | "food" | "exercise" | "home" | "trend" | "profile";
 
+const illustratedAsset: Partial<Record<IllustrationKind, string>> = {
+  blood: "/ui-icons/blood-pressure.png",
+  food: "/ui-icons/food-plate.png",
+  exercise: "/ui-icons/exercise-dumbbell.png",
+  trend: "/ui-icons/trend-chart.png",
+};
+
 function IllustratedIcon({
   kind,
   size = "action",
@@ -277,6 +284,14 @@ function IllustratedIcon({
   kind: IllustrationKind;
   size?: "action" | "nav";
 }) {
+  const asset = illustratedAsset[kind];
+  if (asset) {
+    return (
+      <span className={`illustrated-icon illustrated-icon-${kind} illustrated-icon-${size} illustrated-icon-asset`} aria-hidden="true">
+        <img src={asset} alt="" />
+      </span>
+    );
+  }
   return (
     <span className={`illustrated-icon illustrated-icon-${kind} illustrated-icon-${size}`} aria-hidden="true">
       <span className="illustrated-icon-shape" />

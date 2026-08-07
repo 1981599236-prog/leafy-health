@@ -2885,6 +2885,194 @@ nav .illustrated-icon {
   .homehead + .plant { aspect-ratio: 1.62 / 1; }
 }
 
+/* Unified hand-drawn icon palette: warm paper, graphite type, turquoise and yellow accents. */
+:root {
+  --ink: #20251f;
+  --muted: #74786d;
+  --paper: #fbfaf3;
+  --bg: #f1f0e7;
+  --sage: #86a264;
+  --pale: #e2ead7;
+  --line: #d7d8cc;
+}
+
+body {
+  background: #dfe1d5;
+  color: var(--ink);
+  font-family: "Aptos", "PingFang SC", "Microsoft YaHei", system-ui, sans-serif;
+}
+
+body::before { opacity: .07; }
+.shell { background: var(--bg); }
+.page { color: var(--ink); }
+
+.login,
+.onboarding {
+  background: radial-gradient(circle at 88% 7%, #d7e4ca 0, transparent 17rem), var(--bg);
+}
+
+.login h1,
+.onboarding h1,
+.homehead h1,
+.title h1,
+.back h1,
+.settings h2,
+.trend h2,
+.calendar h2,
+.card h2,
+.food-day h2 {
+  color: #20251f;
+  font-family: "Arial Narrow", "Aptos Display", "PingFang SC", sans-serif;
+}
+
+.homehead p,
+.title p,
+.homehead > div > span,
+.back p,
+.login label,
+.onboarding label,
+.settings label,
+.exercise-editor label,
+.gym-editor > label,
+.notice,
+.intro { color: #656b61; }
+
+.avatar {
+  border: 1px solid #cbd2c3;
+  background: #e9f0e1;
+  color: #344b32;
+  box-shadow: none;
+}
+
+.homehead + .plant {
+  border: 1px solid #cdd5c5;
+  background:
+    radial-gradient(circle at 76% 19%, #fff0ae 0 1px, transparent 2px),
+    linear-gradient(140deg, #dcebd3, #c7d8c3 58%, #aabda3);
+  box-shadow: 0 12px 28px #75806e1f;
+}
+
+.homehead + .plant::before {
+  background:
+    radial-gradient(circle at 71% 15%, #f5e3a1 0 11%, transparent 11.5%),
+    linear-gradient(180deg, transparent 54%, #55734e88 100%);
+}
+
+.homehead + .plant .plant-label { color: #243123; }
+.homehead + .plant .plant-label span { color: #52604d; }
+
+.illustrated-icon-asset {
+  display: inline-grid;
+  place-items: center;
+  overflow: hidden;
+  color: inherit;
+}
+
+.illustrated-icon-asset img {
+  width: 142%;
+  height: 142%;
+  display: block;
+  object-fit: contain;
+}
+
+.illustrated-icon-nav.illustrated-icon-asset img { width: 128%; height: 128%; }
+
+.quick-actions .action,
+.calendar,
+.card,
+.trend,
+.profilecard,
+.food-day,
+.gym-template,
+.exercise-editor,
+.gym-editor,
+.gym-templates,
+.food-history-link,
+.reference,
+.metric-detail,
+.blood-detail,
+.settings > section {
+  border-color: #d7d8cc;
+  background: #fbfaf3;
+  color: #252a23;
+  box-shadow: 0 8px 18px #76807012;
+}
+
+.quick-actions .action::after { background: linear-gradient(140deg, #ffffffa6, transparent 42%); }
+.quick-actions .action > span { border-color: #d7dfd1; background: #eff4e9; }
+.quick-actions .action:nth-child(2) > span { border-color: #d8dcb4; background: #fbf3ca; }
+.quick-actions .action:nth-child(3) > span { border-color: #c7dddd; background: #e4f2ef; }
+.quick-actions .action b,
+.quick-actions .action small,
+.sectiontitle,
+.energy h2,
+.energy b,
+.card b,
+.trend b,
+.settings b { color: #252a23; }
+.quick-actions .action i { color: #739158; }
+
+.energy > div {
+  border-color: #d9dccf;
+  background: #e9eee2;
+}
+
+.energy span { border-color: #d4d9cc; }
+.energy small,
+.energy i,
+.bmr i { color: #6c7468; }
+
+.card,
+.trend,
+.profilecard,
+.settings > section { background: #fbfaf3; }
+
+.login input,
+.onboarding input,
+.settings label input,
+.exercise-editor input,
+.gym-editor > label > input,
+.movement input,
+.preset-name-row input,
+.preset-number-row input,
+.preset-number-row select {
+  border-color: #d6d9cc;
+  background: #fffefa;
+  color: #242923;
+}
+
+.login input:focus,
+.onboarding input:focus,
+.settings label input:focus,
+.exercise-editor input:focus,
+.gym-editor > label > input:focus,
+.movement input:focus { border-color: #54aabb; box-shadow: 0 0 0 3px #54aabb20; }
+
+.choices button { border-color: #d6d9cc; background: #fffefa; color: #4e564d; }
+.chosen,
+.settings .ai-save,
+.primary { background: #f2c83d !important; color: #22271f !important; box-shadow: 0 8px 18px #e0b5222e; }
+
+.secondary { border-color: #c9d4c5; background: #e7eee2; color: #344b32; }
+.logout { background: #f4e5d9; color: #7b4c35; }
+
+nav {
+  border-color: #d5d8cc;
+  background: #f7f6efeb;
+  box-shadow: 0 -9px 24px #7c806e12;
+}
+
+nav button { color: #778075; }
+nav .active { color: #20251f; }
+nav .active .illustrated-icon-nav { filter: drop-shadow(0 2px 0 #f2c83d); }
+
+.toast { border-color: #38483a; background: #29372c; color: #fffef7; }
+
+@media (prefers-reduced-motion: no-preference) {
+  .quick-actions .action:hover .illustrated-icon-asset img { transform: translateY(-2px) rotate(-2deg); }
+  .illustrated-icon-asset img { transition: transform .2s ease; }
+}
+
 /* 趋势只保留真正需要回看的三类信息，减少纵向占用。 */
 .real-trend {
   padding: 13px;
