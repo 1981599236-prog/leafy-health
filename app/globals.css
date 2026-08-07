@@ -3233,6 +3233,45 @@ nav .active .illustrated-icon-nav { filter: drop-shadow(0 2px 0 #f2c83d); }
   font-size: 14px;
 }
 
+/* 首页固定为两段式构图：上方盆栽场景，下方三件小事。 */
+.today-home {
+  min-height: calc(100dvh - 78px);
+  padding: 0 16px;
+  display: grid;
+  grid-template-rows: minmax(0, 55fr) minmax(0, 45fr);
+  overflow: hidden;
+}
+
+.today-home .plant {
+  min-height: 0;
+  height: auto;
+  margin: 0;
+  align-self: stretch;
+  border-radius: 0 0 28px 28px;
+}
+
+.today-home .task-zone {
+  min-height: 0;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  gap: 8px;
+  padding: 12px 0 10px;
+}
+
+.today-home .sectiontitle {
+  margin: 0 2px;
+}
+
+.today-home .quick-actions {
+  min-height: 0;
+  grid-template-rows: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.today-home .quick-actions .action {
+  min-height: 0;
+}
+
 .real-trend .blood-day,
 .real-trend .metric-day {
   height: 100px;

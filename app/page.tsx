@@ -1154,10 +1154,11 @@ export default function Page() {
       {view === "home" && (
         <section className="page today-home">
           <Plant growth={growth} />
-          <h2 className="sectiontitle">
-            今天，做这三件小事 <i>{growth}/90</i>
-          </h2>
-          <div className="quick-actions">
+          <div className="task-zone">
+            <h2 className="sectiontitle">
+              今天，做这三件小事 <i>{growth}/90</i>
+            </h2>
+            <div className="quick-actions">
             <Action
               icon="blood"
               title={bloodDone ? "血压已记录" : "记录血压"}
@@ -1189,6 +1190,7 @@ export default function Page() {
               done={exerciseTotal > 0}
               click={() => setView("exercise")}
             />
+            </div>
           </div>
         </section>
       )}
