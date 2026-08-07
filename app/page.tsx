@@ -252,7 +252,7 @@ function Plant({ growth }: { growth: number }) {
       <div className="stem" />
       <div className="pot-rim" />
       <div className="pot" />
-      <div className="plant-label">
+      <div className="plant-label" aria-hidden="true">
         <b>
           {growth >= 90
             ? "今天开花啦"

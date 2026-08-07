@@ -3272,6 +3272,37 @@ nav .active .illustrated-icon-nav { filter: drop-shadow(0 2px 0 #f2c83d); }
   min-height: 0;
 }
 
+/* 首页只保留盆栽与三张记录卡，避免重复文字干扰画面。 */
+.today-home .plant-label,
+.today-home .sectiontitle {
+  display: none;
+}
+
+/* 右侧插画维持完整方形画布，并在卡片中垂直居中。 */
+.today-home .quick-actions .action > .illustrated-icon {
+  align-self: center;
+  justify-self: end;
+  width: 100%;
+  height: auto;
+  min-height: 0;
+  aspect-ratio: 1;
+  max-height: calc(100% - 2px);
+}
+
+.today-home .quick-actions .action > .illustrated-icon img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+/* 底部导航与页面纸色融为一体，不再像独立的分隔栏。 */
+nav {
+  border-top-color: transparent;
+  background: var(--bg);
+  box-shadow: none;
+  backdrop-filter: none;
+}
+
 .real-trend .blood-day,
 .real-trend .metric-day {
   height: 100px;
