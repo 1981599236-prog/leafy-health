@@ -3113,6 +3113,126 @@ nav .active .illustrated-icon-nav { filter: drop-shadow(0 2px 0 #f2c83d); }
   height: 108%;
 }
 
+/* 首页重心调整：盆栽先出现，三项记录以纵向内容卡片承接。 */
+.today-home {
+  padding-top: 14px;
+  padding-bottom: 20px;
+}
+
+.today-home .plant {
+  height: clamp(330px, 45dvh, 410px);
+  margin: 0 0 12px;
+  border-radius: 28px;
+}
+
+.today-home .plant .stem { height: 170px; }
+.today-home .plant .branch-one { bottom: 174px; }
+.today-home .plant .branch-two { bottom: 205px; }
+.today-home .plant .leaf { bottom: 179px; }
+.today-home .plant .l2 { bottom: 208px; }
+.today-home .plant .l3 { bottom: 246px; }
+.today-home .plant .l4 { bottom: 258px; }
+.today-home .plant .flower { bottom: 274px; }
+
+.today-home .sectiontitle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 0 2px 9px;
+  color: #252a23;
+  font-size: 15px;
+}
+
+.today-home .sectiontitle i {
+  border: 1px solid #d6dfcf;
+  background: #edf3e8;
+  color: #5f7f4c;
+  font-size: 11px;
+}
+
+.today-home .quick-actions {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 9px;
+}
+
+.today-home .quick-actions .action {
+  min-height: 94px;
+  grid-template-columns: minmax(0, 1fr) 104px;
+  grid-template-rows: 1fr;
+  align-items: stretch;
+  justify-items: stretch;
+  gap: 10px;
+  padding: 8px 9px 8px 15px;
+  overflow: hidden;
+  border: 1px solid #d7ddd1;
+  border-radius: 18px;
+  background: #fffef8;
+  box-shadow: 0 6px 16px rgb(65 82 55 / 8%);
+}
+
+.today-home .quick-actions .action::after {
+  background: linear-gradient(125deg, rgb(255 255 255 / 72%), transparent 48%);
+}
+
+.today-home .quick-actions .action > div {
+  grid-column: 1;
+  grid-row: 1;
+  z-index: 1;
+  align-self: center;
+  width: auto;
+  text-align: left;
+}
+
+.today-home .quick-actions .action b {
+  overflow: visible;
+  color: #222920;
+  font-size: 17px;
+  font-weight: 800;
+  letter-spacing: -0.04em;
+  white-space: normal;
+}
+
+.today-home .quick-actions .action small {
+  display: block;
+  margin-top: 5px;
+  overflow: hidden;
+  color: #778071;
+  font-size: 11px;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.today-home .quick-actions .action > .illustrated-icon {
+  grid-column: 2;
+  grid-row: 1;
+  z-index: 1;
+  align-self: stretch;
+  justify-self: stretch;
+  width: auto;
+  height: auto;
+  min-height: 76px;
+  overflow: hidden;
+  border-radius: 13px;
+  background: #e6f1e3;
+}
+
+.today-home .quick-actions .action:nth-child(2) > .illustrated-icon { background: #fff0c4; }
+.today-home .quick-actions .action:nth-child(3) > .illustrated-icon { background: #e3eeef; }
+
+.today-home .quick-actions .action > .illustrated-icon img {
+  width: 112%;
+  height: 112%;
+}
+
+.today-home .quick-actions .action i {
+  z-index: 2;
+  right: 15px;
+  top: 12px;
+  color: #638a50;
+  font-size: 14px;
+}
+
 .real-trend .blood-day,
 .real-trend .metric-day {
   height: 100px;

@@ -423,8 +423,6 @@ export default function Page() {
   }, [profile]);
   const growth =
     (bloodDone ? 30 : 0) + (intake > 0 ? 30 : 0) + (exerciseTotal > 0 ? 30 : 0);
-  const totalOut = bmr + exerciseTotal;
-  const balance = intake - totalOut;
   const days = Array.from(
     { length: new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate() },
     (_, i) => i + 1,
@@ -1154,23 +1152,7 @@ export default function Page() {
   return (
     <main className="shell app">
       {view === "home" && (
-        <section className="page">
-          <header className="homehead">
-            <div>
-              <p>
-                {new Intl.DateTimeFormat("zh-CN", {
-                  month: "long",
-                  day: "numeric",
-                  weekday: "short",
-                }).format(now)}
-              </p>
-              <h1>早上好 🌱</h1>
-              <span>今天也照顾一下自己。</span>
-            </div>
-            <button className="avatar" onClick={() => setView("settings")}>
-              {name}
-            </button>
-          </header>
+        <section className="page today-home">
           <Plant growth={growth} />
           <h2 className="sectiontitle">
             今天，做这三件小事 <i>{growth}/90</i>
@@ -1208,23 +1190,6 @@ export default function Page() {
               click={() => setView("exercise")}
             />
           </div>
-          <section className="energy">
-            <h2>
-              今日能量{" "}
-              <i>
-                {intake
-                  ? balance < 0
-                    ? "🔥 消耗中"
-                    : "⚖️ 接近平衡"
-                  : "等待记录"}
-              </i>
-            </h2>
-            <div>
-              <Stat label="摄入" value={intake || "—"} />
-              <Stat label="消耗" value={totalOut} />
-              <Stat label="热量差" value={intake ? balance : "—"} />
-            </div>
-          </section>
         </section>
       )}
       {view === "blood" && (
