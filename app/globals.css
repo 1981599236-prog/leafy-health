@@ -3235,6 +3235,7 @@ nav .active .illustrated-icon-nav { filter: drop-shadow(0 2px 0 #f2c83d); }
 
 /* 首页固定为两段式构图：上方盆栽场景，下方三件小事。 */
 .today-home {
+  height: calc(100dvh - 78px);
   min-height: calc(100dvh - 78px);
   padding: 0 16px;
   display: grid;
@@ -3245,9 +3246,11 @@ nav .active .illustrated-icon-nav { filter: drop-shadow(0 2px 0 #f2c83d); }
 .today-home .plant {
   min-height: 0;
   height: auto;
-  margin: 0;
+  width: calc(100% + 32px);
+  margin: 0 -16px;
   align-self: stretch;
-  border-radius: 0 0 28px 28px;
+  border-bottom-left-radius: 50% 7%;
+  border-bottom-right-radius: 50% 7%;
 }
 
 .today-home .task-zone {
