@@ -2889,8 +2889,8 @@ nav .illustrated-icon {
 :root {
   --ink: #20251f;
   --muted: #74786d;
-  --paper: #fbfaf3;
-  --bg: #f1f0e7;
+  --paper: #ffffff;
+  --bg: #ffffff;
   --sage: #86a264;
   --pale: #e2ead7;
   --line: #d7d8cc;
@@ -3256,9 +3256,9 @@ nav .active .illustrated-icon-nav { filter: drop-shadow(0 2px 0 #f2c83d); }
 .today-home .task-zone {
   min-height: 0;
   display: grid;
-  grid-template-rows: auto minmax(0, 1fr);
-  gap: 8px;
-  padding: 12px 0 10px;
+  grid-template-rows: minmax(0, 1fr);
+  gap: 0;
+  padding: 18px 0 10px;
 }
 
 .today-home .sectiontitle {
