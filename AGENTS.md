@@ -8,4 +8,11 @@ This directory is a local mirror of the ChatGPT project “健康记录APP”.
 
 ## Project instructions
 
-This project has no custom instructions.
+### Terrarium rule activation
+
+Only apply the asset-generation rules in `terrarium/AGENTS.md` when the user
+explicitly says: `按 terrarium 规则生成`.
+
+Do not infer this from a request merely mentioning a plant, bonsai, terrarium,
+or ecosystem. Ordinary image and illustration requests must use their own
+requirements unless the user explicitly activates the terrarium rules.
