@@ -3455,22 +3455,17 @@ nav {
   z-index: 1;
   display: block;
   min-height: 0;
-  padding: 13px 0 0;
-  overflow: visible;
+  margin: -22px -16px 0;
+  padding: 34px 16px 0;
+  overflow: hidden;
+  border-radius: 22px 22px 0 0;
+  corner-shape: superellipse(1.25);
   background: #ffffff;
 }
 
-/* A shallow, soft upward arch separates the stage from the task sheet. */
+/* The task sheet uses the exact same soft corner language as the cards. */
 .today-home .task-zone::before {
-  position: absolute;
-  z-index: -1;
-  top: -14px;
-  right: -16px;
-  left: -16px;
-  height: 28px;
-  content: "";
-  background: #ffffff;
-  border-radius: 50% 50% 0 0 / 100% 100% 0 0;
+  content: none;
 }
 
 .today-home .quick-actions {
