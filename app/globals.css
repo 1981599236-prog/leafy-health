@@ -3395,3 +3395,24 @@ nav {
     transition-duration: 0.01ms !important;
   }
 }
+
+/* 电脑预览时按常见手机屏幕高度展示首页，避免被高屏幕拉成长条。 */
+@media (min-width: 481px) and (min-height: 845px) {
+  .home-preview {
+    height: 844px;
+    min-height: 844px;
+    padding-bottom: 78px;
+  }
+
+  .home-preview .today-home {
+    height: 766px;
+    min-height: 766px;
+  }
+
+  .home-preview nav {
+    position: absolute;
+    left: 0;
+    width: 100%;
+    transform: none;
+  }
+}

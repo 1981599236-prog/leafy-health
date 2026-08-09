@@ -1150,7 +1150,7 @@ export default function Page() {
     );
   const name = profile.display_name || "叶";
   return (
-    <main className="shell app">
+    <main className={`shell app ${view === "home" ? "home-preview" : ""}`}>
       {view === "home" && (
         <section className="page today-home">
           <Plant growth={growth} />
