@@ -3416,3 +3416,133 @@ nav {
     transform: none;
   }
 }
+
+/* Home composition: the empty bonsai stage is the visual lead; three compact
+   actions live in the remaining space above the persistent navigation. */
+.home-preview {
+  height: 100dvh;
+  min-height: 100dvh;
+  padding-bottom: 0;
+  overflow: hidden;
+  background: #ffffff;
+}
+
+.today-home {
+  height: 100dvh;
+  min-height: 100dvh;
+  padding: 0 16px;
+  grid-template-rows: 60% calc(40% - 78px);
+  background: #ffffff;
+}
+
+.today-home .plant {
+  width: calc(100% + 32px);
+  min-height: 0;
+  margin: 0 -16px;
+  border: 0;
+  border-radius: 0;
+  background: linear-gradient(155deg, #1a231c 0%, #0d120f 72%, #080b09 100%);
+  box-shadow: none;
+}
+
+.today-home .plant::before,
+.today-home .plant > * {
+  display: none;
+}
+
+.today-home .task-zone {
+  position: relative;
+  z-index: 1;
+  display: block;
+  min-height: 0;
+  padding: 13px 0 0;
+  overflow: visible;
+  background: #ffffff;
+}
+
+/* A shallow, soft upward arch separates the stage from the task sheet. */
+.today-home .task-zone::before {
+  position: absolute;
+  z-index: -1;
+  top: -14px;
+  right: -16px;
+  left: -16px;
+  height: 28px;
+  content: "";
+  background: #ffffff;
+  border-radius: 50% 50% 0 0 / 100% 100% 0 0;
+}
+
+.today-home .quick-actions {
+  height: 100%;
+  min-height: 0;
+  grid-template-rows: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.today-home .quick-actions .action {
+  min-height: 0;
+  grid-template-columns: minmax(0, 1fr) 80px;
+  gap: 10px;
+  padding: 7px 9px 7px 16px;
+  border: 1px solid #edf0e8;
+  border-radius: 22px;
+  corner-shape: superellipse(1.25);
+  background: #fffefb;
+  box-shadow: 0 7px 18px rgb(48 63 45 / 7%);
+}
+
+.today-home .quick-actions .action > .illustrated-icon {
+  width: 80px;
+  height: 100%;
+  max-height: none;
+  min-height: 0;
+  aspect-ratio: 1;
+  overflow: hidden;
+  border-radius: 18px;
+  corner-shape: superellipse(1.25);
+}
+
+.today-home .quick-actions .action b {
+  font-size: 16px;
+  line-height: 1.1;
+}
+
+.today-home .quick-actions .action small {
+  margin-top: 4px;
+  font-size: 10px;
+}
+
+.today-home .quick-actions .action i {
+  top: 8px;
+  right: 12px;
+  font-size: 12px;
+}
+
+.today-home + nav,
+.home-preview nav {
+  border-top-color: transparent;
+  background: #ffffff;
+  box-shadow: none;
+}
+
+@media (min-width: 481px) and (min-height: 845px) {
+  .home-preview {
+    height: 844px;
+    min-height: 844px;
+  }
+
+  .home-preview .today-home {
+    height: 844px;
+    min-height: 844px;
+  }
+}
+
+@media (max-height: 700px) {
+  .today-home .task-zone { padding-top: 10px; }
+  .today-home .quick-actions { gap: 6px; }
+  .today-home .quick-actions .action { border-radius: 18px; }
+  .today-home .quick-actions .action > .illustrated-icon { width: 66px; }
+  .today-home .quick-actions .action b { font-size: 14px; }
+  .today-home .quick-actions .action small { font-size: 9px; }
+}
