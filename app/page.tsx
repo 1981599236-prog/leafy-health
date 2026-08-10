@@ -67,6 +67,7 @@ type AiConfig = {
   apiKey: string;
   keyHint: string;
 };
+type FoodConfidence = "high" | "medium" | "low";
 type FoodAnalysis = {
   items: { name: string; portion: string; grams: number; calories: number }[];
   totalCalories: number;
@@ -75,6 +76,13 @@ type FoodAnalysis = {
   fatG: number;
   sugarG: number;
   fiberG: number;
+  confidence?: FoodConfidence;
+  confidenceReason?: string;
+  estimateBasis?: string;
+  needsUserInput?: boolean;
+  followUpQuestion?: string;
+  reviewed?: boolean;
+  reviewNotes?: string[];
 };
 type FoodHistoryDay = {
   key: string;
@@ -159,6 +167,11 @@ const caloriesByDay = (rows: any[]) =>
     map.set(key, (map.get(key) ?? 0) + Number(row.calories ?? 0));
     return map;
   }, new Map<string, number>());
+const foodConfidenceLabel = (confidence?: FoodConfidence) => {
+  if (confidence === "high") return "较高";
+  if (confidence === "low") return "较低";
+  return "中等";
+};
 function errorMessage(error: unknown) {
   if (error instanceof Error) return error.message;
   if (typeof error === "string") return error;
@@ -390,6 +403,7 @@ export default function Page() {
     [foodStage, setFoodStage] = useState<"upload" | "result" | "history">("upload"),
     [toast, setToast] = useState(""),
     [foodAnalysis, setFoodAnalysis] = useState<FoodAnalysis | null>(null),
+    [foodNote, setFoodNote] = useState(""),
     [isRecognizing, setIsRecognizing] = useState(false),
     [aiConfig, setAiConfig] = useState<AiConfig>(emptyAiConfig),
     [aiConfigLoading, setAiConfigLoading] = useState(false),
@@ -815,6 +829,11 @@ export default function Page() {
         fat_g: foodAnalysis.fatG,
         sugar_g: foodAnalysis.sugarG,
         fiber_g: foodAnalysis.fiberG,
+        ai_confidence: foodAnalysis.confidence ?? "medium",
+        ai_confidence_reason: foodAnalysis.confidenceReason ?? "",
+        ai_estimate_basis: foodAnalysis.estimateBasis ?? "",
+        ai_reviewed: Boolean(foodAnalysis.reviewed),
+        ...(foodNote.trim() ? { user_note: foodNote.trim() } : {}),
         createdAt: new Date().toISOString(),
       };
       await cloudDb.collection("health_food").add(record);
@@ -823,6 +842,7 @@ export default function Page() {
       setChecked((current) => new Set(current).add(now.getDate()));
       setFoodStage("upload");
       setFoodAnalysis(null);
+      setFoodNote("");
       setView("home");
       setToast("饮食已记录，成长值 +30");
     } catch (error) {
@@ -959,7 +979,11 @@ export default function Page() {
       });
       const imageUrl = links?.fileList?.[0]?.tempFileURL;
       if (!imageUrl) throw new Error("临时图片链接生成失败，请稍后再试");
-      const result = await callFoodAi({ action: "recognize", imageDataUrl: imageUrl });
+      const result = await callFoodAi({
+        action: "recognize",
+        imageDataUrl: imageUrl,
+        userNote: foodNote.trim(),
+      });
       setFoodAnalysis(result as FoodAnalysis);
       setFoodStage("result");
       setToast("识别完成，确认后再记录");
@@ -1271,6 +1295,7 @@ export default function Page() {
             go={() => {
               setFoodStage("upload");
               setFoodAnalysis(null);
+              setFoodNote("");
               setView("home");
             }}
           />
@@ -1293,6 +1318,18 @@ export default function Page() {
                   onChange={foodFile}
                 />
               </label>
+              <div className="food-note">
+                <label htmlFor="food-note">补充说明 <span>可选</span></label>
+                <textarea
+                  id="food-note"
+                  value={foodNote}
+                  maxLength={180}
+                  disabled={isRecognizing}
+                  onChange={(event) => setFoodNote(event.target.value)}
+                  placeholder="例如：半碗、少油、没有喝汤"
+                />
+                <small>只有菜名、做法或份量拍不清时再写，照片清楚可以直接拍。</small>
+              </div>
               <button
                 type="button"
                 className="food-history-link"
@@ -1334,6 +1371,18 @@ export default function Page() {
                   膳食纤维 <b>{foodAnalysis.fiberG}g</b>
                 </span>
               </div>
+              <section className={`food-confidence is-${foodAnalysis.confidence ?? "medium"}`}>
+                <div>
+                  <span>估算可信度</span>
+                  <b>{foodConfidenceLabel(foodAnalysis.confidence)}</b>
+                </div>
+                <p>{foodAnalysis.confidenceReason || "照片中的信息已用于本次保守估算"}</p>
+                <small>{foodAnalysis.estimateBasis || "按照片可见食物与常见熟食的平均营养数据估算"}</small>
+                <em>{foodAnalysis.reviewed ? "AI 已二次复核" : "已完成基础一致性校验"}</em>
+                {foodAnalysis.needsUserInput && foodAnalysis.followUpQuestion && (
+                  <strong>可补充：{foodAnalysis.followUpQuestion}</strong>
+                )}
+              </section>
               <h2>
                 估算热量 <strong>{foodAnalysis.totalCalories} kcal</strong>
               </h2>

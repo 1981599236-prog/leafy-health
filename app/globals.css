@@ -509,6 +509,57 @@ nav .active {
 .upload input {
   display: none;
 }
+.food-note {
+  margin-top: 14px;
+  padding: 14px 15px 13px;
+  border: 1px solid #e3e9de;
+  border-radius: 17px;
+  background: #fffefb;
+  box-shadow: 0 5px 18px #655d3c08;
+}
+.food-note label {
+  display: flex;
+  align-items: baseline;
+  gap: 7px;
+  color: var(--ink);
+  font-size: 13px;
+  font-weight: 700;
+}
+.food-note label span {
+  color: #97a195;
+  font-size: 10px;
+  font-weight: 400;
+}
+.food-note textarea {
+  width: 100%;
+  min-height: 56px;
+  margin-top: 9px;
+  padding: 9px 10px;
+  resize: vertical;
+  border: 1px solid #dfe7d9;
+  border-radius: 11px;
+  outline: none;
+  background: #fbfcf8;
+  color: var(--ink);
+  font: inherit;
+  font-size: 12px;
+  line-height: 1.45;
+}
+.food-note textarea:focus {
+  border-color: #86a974;
+  box-shadow: 0 0 0 3px #86a9741f;
+}
+.food-note textarea:disabled {
+  color: #9ba49a;
+  background: #f4f6f1;
+}
+.food-note small {
+  display: block;
+  margin-top: 7px;
+  color: #899288;
+  font-size: 10px;
+  line-height: 1.45;
+}
 .food-history-link {
   width: 100%;
   margin-top: 13px;
@@ -597,6 +648,62 @@ nav .active {
 }
 .nutri b {
   color: #465645;
+}
+.food-confidence {
+  margin-top: 14px;
+  padding: 12px 13px;
+  border: 1px solid #e3e9de;
+  border-radius: 14px;
+  background: #fbfcf8;
+  color: #61705f;
+}
+.food-confidence > div {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 12px;
+  font-weight: 700;
+}
+.food-confidence > div b {
+  padding: 3px 8px;
+  border-radius: 999px;
+  background: #e4f0de;
+  color: #547748;
+  font-size: 11px;
+}
+.food-confidence.is-medium > div b {
+  background: #f7edd0;
+  color: #8b6a26;
+}
+.food-confidence.is-low > div b {
+  background: #f7e3dc;
+  color: #95604e;
+}
+.food-confidence p {
+  margin: 7px 0 3px;
+  color: #576455;
+  font-size: 12px;
+  line-height: 1.45;
+}
+.food-confidence small,
+.food-confidence em {
+  display: block;
+  color: #899288;
+  font-size: 10px;
+  font-style: normal;
+  line-height: 1.45;
+}
+.food-confidence em {
+  margin-top: 5px;
+  color: #658656;
+}
+.food-confidence strong {
+  display: block;
+  margin-top: 7px;
+  color: #80673d;
+  font-size: 11px;
+  line-height: 1.45;
 }
 .foodresult h2 {
   font-size: 14px;
