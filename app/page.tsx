@@ -281,6 +281,27 @@ function Plant({ growth }: { growth: number }) {
   );
 }
 
+/**
+ * 首页生态箱只提供容器和留白；以后解锁的植物、石头等素材会叠放在
+ * terrarium-slots 中，而不是烘焙进背景图里。
+ */
+function HomeTerrarium() {
+  return (
+    <section className="terrarium-stage" aria-label="生态箱场景">
+      <img
+        className="terrarium-stage-art"
+        src="/home-assets/terrarium-tank.png"
+        alt=""
+      />
+      <div className="terrarium-slots" aria-hidden="true">
+        <span className="terrarium-slot terrarium-slot-far" />
+        <span className="terrarium-slot terrarium-slot-middle" />
+        <span className="terrarium-slot terrarium-slot-near" />
+      </div>
+    </section>
+  );
+}
+
 type IllustrationKind = "blood" | "food" | "exercise" | "home" | "trend" | "profile";
 
 const illustratedAsset: Partial<Record<IllustrationKind, string>> = {
@@ -290,6 +311,12 @@ const illustratedAsset: Partial<Record<IllustrationKind, string>> = {
   home: "/ui-icons/home-v2.png",
   trend: "/ui-icons/trend-v2.png",
   profile: "/ui-icons/profile-v2.png",
+};
+
+const homeTaskAsset: Record<Extract<IllustrationKind, "blood" | "food" | "exercise">, string> = {
+  blood: "/home-assets/blood-task.png",
+  food: "/home-assets/food-task.png",
+  exercise: "/home-assets/exercise-task.png",
 };
 
 function IllustratedIcon({
@@ -1178,7 +1205,7 @@ export default function Page() {
     <main className={`shell app ${view === "home" ? "home-preview" : ""}`}>
       {view === "home" && (
         <section className="page today-home">
-          <Plant growth={growth} />
+          <HomeTerrarium />
           <div className="task-zone">
             <h2 className="sectiontitle">
               今天，做这三件小事 <i>{growth}/90</i>
@@ -2090,8 +2117,10 @@ function Action({
   click: () => void;
 }) {
   return (
-    <button className="action" onClick={click}>
-      <IllustratedIcon kind={icon} />
+      <button className="action" onClick={click}>
+        <span className="home-task-icon" aria-hidden="true">
+          <img src={homeTaskAsset[icon]} alt="" />
+        </span>
       <div>
         <b>{title}</b>
         <small>{detail}</small>

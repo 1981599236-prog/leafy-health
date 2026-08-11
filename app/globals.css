@@ -3648,3 +3648,140 @@ nav {
   .today-home .quick-actions .action b { font-size: 14px; }
   .today-home .quick-actions .action small { font-size: 9px; }
 }
+
+/* 首页生态箱：使用独立玻璃缸素材，缸内三层留给未来可解锁、可摆放的元素。 */
+.home-preview {
+  background: #fff;
+}
+
+.today-home {
+  grid-template-rows: minmax(0, 59%) minmax(0, calc(41% - 78px));
+  padding: 0;
+  background: #fff;
+}
+
+.terrarium-stage {
+  position: relative;
+  min-height: 0;
+  overflow: hidden;
+  background: #fff;
+}
+
+.terrarium-stage-art {
+  position: absolute;
+  top: 54%;
+  left: 50%;
+  display: block;
+  width: 136%;
+  max-width: none;
+  height: auto;
+  transform: translate(-50%, -48%);
+  pointer-events: none;
+  user-select: none;
+}
+
+.terrarium-slots {
+  position: absolute;
+  inset: 29% 10% 9%;
+  pointer-events: none;
+}
+
+.terrarium-slot {
+  position: absolute;
+  display: block;
+}
+
+.terrarium-slot-far { inset: 0; z-index: 1; }
+.terrarium-slot-middle { inset: 7% 7% 2%; z-index: 2; }
+.terrarium-slot-near { inset: 18% 0 0; z-index: 3; }
+
+.today-home .task-zone {
+  z-index: 2;
+  display: block;
+  min-height: 0;
+  margin: -24px 0 0;
+  padding: 28px 18px 0;
+  overflow: hidden;
+  border-radius: 34px 34px 0 0;
+  corner-shape: superellipse(1.3);
+  background: #fff;
+}
+
+.today-home .quick-actions {
+  height: 100%;
+  min-height: 0;
+  grid-template-rows: repeat(3, minmax(0, 1fr));
+  gap: 9px;
+}
+
+.today-home .quick-actions .action {
+  min-height: 0;
+  grid-template-columns: minmax(0, 1fr) 64px;
+  gap: 12px;
+  padding: 8px 12px 8px 16px;
+  border: 1px solid #e8e5d8;
+  border-radius: 24px;
+  corner-shape: superellipse(1.35);
+  background: #fffdfb;
+  box-shadow: 0 8px 19px rgb(91 82 61 / 7%);
+}
+
+.today-home .quick-actions .action::after { background: none; }
+
+.today-home .quick-actions .action > div {
+  align-self: center;
+}
+
+.today-home .quick-actions .action b {
+  color: #29342d;
+  font-size: 16px;
+  line-height: 1.15;
+}
+
+.today-home .quick-actions .action small {
+  margin-top: 4px;
+  color: #899087;
+  font-size: 10px;
+}
+
+.today-home .home-task-icon {
+  display: grid;
+  grid-column: 2;
+  grid-row: 1;
+  place-items: center;
+  align-self: center;
+  justify-self: center;
+  width: 64px;
+  height: 64px;
+  overflow: visible;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+}
+
+.today-home .home-task-icon img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  mix-blend-mode: multiply;
+}
+
+.today-home .quick-actions .action i {
+  display: none;
+}
+
+.today-home + nav,
+.home-preview nav {
+  height: 78px;
+  border-top: 0;
+  background: #fff;
+}
+
+@media (max-height: 700px) {
+  .today-home { grid-template-rows: minmax(0, 57%) minmax(0, calc(43% - 70px)); }
+  .today-home .task-zone { margin-top: -18px; padding: 22px 15px 0; border-radius: 28px 28px 0 0; }
+  .today-home .quick-actions { gap: 7px; }
+  .today-home .quick-actions .action { grid-template-columns: minmax(0, 1fr) 56px; border-radius: 20px; }
+  .today-home .home-task-icon { width: 56px; height: 56px; }
+}
