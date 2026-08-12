@@ -3669,13 +3669,13 @@ nav {
 
 .terrarium-stage-art {
   position: absolute;
-  top: 54%;
+  top: 0;
   left: 50%;
   display: block;
-  width: 136%;
+  width: 100%;
   max-width: none;
   height: auto;
-  transform: translate(-50%, -48%);
+  transform: translateX(-50%);
   pointer-events: none;
   user-select: none;
 }
