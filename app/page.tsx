@@ -281,21 +281,79 @@ function Plant({ growth }: { growth: number }) {
   );
 }
 
+type TerrariumAssetCategory = "ground" | "plant" | "stone" | "mushroom";
+
+type TerrariumAsset = {
+  id: string;
+  name: string;
+  category: TerrariumAssetCategory;
+  src: string;
+  placementClass: string;
+};
+
+const starterTerrariumAssets: TerrariumAsset[] = [
+  {
+    id: "ground-moss",
+    name: "苔藓铺底",
+    category: "ground",
+    src: "/terrarium-assets/ground-moss.png",
+    placementClass: "asset-ground",
+  },
+  {
+    id: "plant-fern",
+    name: "小蕨叶",
+    category: "plant",
+    src: "/terrarium-assets/plant-fern.png",
+    placementClass: "asset-plant",
+  },
+  {
+    id: "rock-moss",
+    name: "苔石",
+    category: "stone",
+    src: "/terrarium-assets/rock-moss.png",
+    placementClass: "asset-stone",
+  },
+  {
+    id: "mushroom-cluster",
+    name: "小蘑菇",
+    category: "mushroom",
+    src: "/terrarium-assets/mushroom-cluster.png",
+    placementClass: "asset-mushroom",
+  },
+];
+
 /**
- * 首页生态箱只提供容器和留白；以后解锁的植物、石头等素材会叠放在
- * terrarium-slots 中，而不是烘焙进背景图里。
+ * 首页生态箱提供画布；已放置素材会作为独立图层覆盖在玻璃缸中，
+ * 后续可继续扩展为自由移动、缩放和前中后景。
  */
 function HomeTerrarium({
   growth,
   showProgress = true,
+  assets = [],
+  onDropAsset,
+  onReturnAsset,
 }: {
   growth: number;
   showProgress?: boolean;
+  assets?: TerrariumAsset[];
+  onDropAsset?: (assetId: string) => void;
+  onReturnAsset?: (assetId: string) => void;
 }) {
   const progress = Math.max(0, Math.min(100, growth));
 
   return (
-    <section className="terrarium-stage" aria-label="生态箱场景">
+    <section
+      className="terrarium-stage"
+      aria-label="生态箱场景"
+      onDragOver={(event) => {
+        if (onDropAsset) event.preventDefault();
+      }}
+      onDrop={(event) => {
+        event.preventDefault();
+        const assetId = event.dataTransfer.getData("application/x-terrarium-asset");
+        if (assetId) onDropAsset?.(assetId);
+      }}
+    >
       {showProgress && (
         <div className="terrarium-growth" aria-label={`生态成长进度 ${progress}%`}>
           <svg viewBox="0 0 24 24" aria-hidden="true">
@@ -311,10 +369,25 @@ function HomeTerrarium({
         src="/home-assets/terrarium-tank.png"
         alt=""
       />
-      <div className="terrarium-slots" aria-hidden="true">
-        <span className="terrarium-slot terrarium-slot-far" />
-        <span className="terrarium-slot terrarium-slot-middle" />
-        <span className="terrarium-slot terrarium-slot-near" />
+      <div className="terrarium-placed-assets" aria-label="已摆放的生态箱素材">
+        {assets.map((asset) => (
+          <div
+            key={asset.id}
+            className={`terrarium-placed-asset ${asset.placementClass}`}
+          >
+            <img src={asset.src} alt={asset.name} draggable={false} />
+            {onReturnAsset && (
+              <button
+                type="button"
+                className="terrarium-placed-remove"
+                aria-label={`将${asset.name}放回仓库`}
+                onClick={() => onReturnAsset(asset.id)}
+              >
+                ×
+              </button>
+            )}
+          </div>
+        ))}
       </div>
     </section>
   );
@@ -466,6 +539,8 @@ export default function Page() {
     [aiConfigLoading, setAiConfigLoading] = useState(false),
     [aiConfigSaving, setAiConfigSaving] = useState(false),
     [aiSettingsOpen, setAiSettingsOpen] = useState(false);
+  const [placedTerrariumAssetIds, setPlacedTerrariumAssetIds] = useState<string[]>([]),
+    [warehouseCategory, setWarehouseCategory] = useState<"all" | TerrariumAssetCategory>("all");
   const savedBlood = useRef("");
   const now = new Date();
   const dayStart = new Date(
@@ -495,6 +570,20 @@ export default function Page() {
   }, [profile]);
   const growth =
     (bloodDone ? 30 : 0) + (intake > 0 ? 30 : 0) + (exerciseTotal > 0 ? 30 : 0);
+  const placedTerrariumAssets = starterTerrariumAssets.filter((asset) =>
+    placedTerrariumAssetIds.includes(asset.id),
+  );
+  const warehouseAssets = starterTerrariumAssets.filter(
+    (asset) => warehouseCategory === "all" || asset.category === warehouseCategory,
+  );
+  const placeTerrariumAsset = (assetId: string) => {
+    setPlacedTerrariumAssetIds((assetIds) =>
+      assetIds.includes(assetId) ? assetIds : [...assetIds, assetId],
+    );
+  };
+  const returnTerrariumAsset = (assetId: string) => {
+    setPlacedTerrariumAssetIds((assetIds) => assetIds.filter((id) => id !== assetId));
+  };
   const days = Array.from(
     { length: new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate() },
     (_, i) => i + 1,
@@ -1232,7 +1321,7 @@ export default function Page() {
     <main className={`shell app ${view === "home" ? "home-preview" : ""}`}>
       {view === "home" && (
         <section className="page today-home">
-          <HomeTerrarium growth={growth} />
+          <HomeTerrarium growth={growth} assets={placedTerrariumAssets} />
           <div className="task-zone">
             <h2 className="sectiontitle">今天，做这三件小事</h2>
             <div className="quick-actions">
@@ -1976,22 +2065,60 @@ export default function Page() {
       )}
       {view === "warehouse" && (
         <section className="page warehouse-page">
-          <HomeTerrarium growth={growth} showProgress={false} />
+          <HomeTerrarium
+            growth={growth}
+            showProgress={false}
+            assets={placedTerrariumAssets}
+            onDropAsset={placeTerrariumAsset}
+            onReturnAsset={returnTerrariumAsset}
+          />
           <section className="warehouse-panel" aria-label="生态箱素材仓库">
             <header className="warehouse-heading">
-              <h1>仓库</h1>
-              <p>点击或拖动素材，放进上方生态箱</p>
+              <div>
+                <h1>仓库</h1>
+                <p>点击或拖动素材，放进上方生态箱</p>
+              </div>
+              <span className="warehouse-count">{placedTerrariumAssets.length}/4</span>
             </header>
             <div className="warehouse-categories" aria-label="素材分类">
-              <button type="button" className="active">全部</button>
-              <button type="button">铺底</button>
-              <button type="button">植物</button>
-              <button type="button">石头</button>
+              {([
+                ["all", "全部"],
+                ["ground", "铺底"],
+                ["plant", "植物"],
+                ["stone", "石头"],
+                ["mushroom", "蘑菇"],
+              ] as const).map(([category, label]) => (
+                <button
+                  key={category}
+                  type="button"
+                  className={warehouseCategory === category ? "active" : ""}
+                  onClick={() => setWarehouseCategory(category)}
+                >
+                  {label}
+                </button>
+              ))}
             </div>
-            <section className="warehouse-empty">
-              <IllustratedIcon kind="warehouse" size="action" />
-              <b>生态箱素材会在这里出现</b>
-              <small>完成记录、获得新素材后，就能从这里挑选并布置。</small>
+            <section className="warehouse-assets" aria-label="已拥有的测试素材">
+              {warehouseAssets.map((asset) => {
+                const placed = placedTerrariumAssetIds.includes(asset.id);
+                return (
+                  <button
+                    key={asset.id}
+                    type="button"
+                    draggable
+                    className={`warehouse-asset ${placed ? "placed" : ""}`}
+                    onClick={() => placeTerrariumAsset(asset.id)}
+                    onDragStart={(event) => {
+                      event.dataTransfer.setData("application/x-terrarium-asset", asset.id);
+                      event.dataTransfer.effectAllowed = "copy";
+                    }}
+                  >
+                    <img src={asset.src} alt="" draggable={false} />
+                    <span>{asset.name}</span>
+                    <small>{placed ? "已摆放" : "点击放置"}</small>
+                  </button>
+                );
+              })}
             </section>
           </section>
         </section>

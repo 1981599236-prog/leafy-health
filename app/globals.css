@@ -3703,20 +3703,88 @@ nav {
   user-select: none;
 }
 
-.terrarium-slots {
+.terrarium-placed-assets {
   position: absolute;
-  inset: 29% 10% 9%;
+  z-index: 3;
+  inset: 35% 10% 10%;
   pointer-events: none;
 }
 
-.terrarium-slot {
+.terrarium-placed-asset {
   position: absolute;
-  display: block;
+  display: grid;
+  place-items: center;
+  pointer-events: auto;
 }
 
-.terrarium-slot-far { inset: 0; z-index: 1; }
-.terrarium-slot-middle { inset: 7% 7% 2%; z-index: 2; }
-.terrarium-slot-near { inset: 18% 0 0; z-index: 3; }
+.terrarium-placed-asset img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  filter: drop-shadow(0 7px 8px rgb(54 72 54 / 14%));
+}
+
+.terrarium-placed-asset.asset-ground {
+  z-index: 1;
+  inset: auto 0 0;
+  width: 100%;
+  height: 32%;
+}
+
+.terrarium-placed-asset.asset-plant {
+  z-index: 3;
+  bottom: 7%;
+  left: 15%;
+  width: 34%;
+  height: 58%;
+}
+
+.terrarium-placed-asset.asset-stone {
+  z-index: 2;
+  right: 12%;
+  bottom: 8%;
+  width: 31%;
+  height: 35%;
+}
+
+.terrarium-placed-asset.asset-mushroom {
+  z-index: 4;
+  bottom: 10%;
+  left: 43%;
+  width: 22%;
+  height: 24%;
+}
+
+.terrarium-placed-remove {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  display: grid;
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  place-items: center;
+  border: 0;
+  border-radius: 50%;
+  background: rgb(34 46 35 / 80%);
+  color: #fff;
+  font-size: 16px;
+  line-height: 1;
+  opacity: 0;
+  transition: opacity 160ms ease;
+}
+
+.terrarium-placed-asset:hover .terrarium-placed-remove,
+.terrarium-placed-asset:focus-within .terrarium-placed-remove {
+  opacity: 1;
+}
+
+@media (hover: none) {
+  .terrarium-placed-remove {
+    opacity: 1;
+  }
+}
 
 .today-home .task-zone {
   z-index: 2;
@@ -3928,11 +3996,20 @@ nav {
 }
 
 .warehouse-heading p {
-  margin: 0;
+  margin: 4px 0 0;
   color: #879087;
   font-size: 11px;
   line-height: 1.45;
-  text-align: right;
+}
+
+.warehouse-count {
+  flex: 0 0 auto;
+  padding: 5px 8px;
+  border-radius: 999px;
+  background: #edf3e9;
+  color: #5f8359;
+  font-size: 11px;
+  font-weight: 700;
 }
 
 .warehouse-categories {
@@ -3960,6 +4037,58 @@ nav {
   border-color: #d8e2d3;
   background: #edf3e9;
   color: #4e714b;
+}
+
+.warehouse-assets {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  padding-bottom: 10px;
+}
+
+.warehouse-asset {
+  position: relative;
+  display: grid;
+  min-height: 128px;
+  padding: 10px;
+  place-items: center;
+  border: 1px solid #e6e5da;
+  border-radius: 22px;
+  background: #fffdfb;
+  box-shadow: 0 7px 18px rgb(86 79 61 / 6%);
+  color: #3a463b;
+  font: inherit;
+  cursor: grab;
+}
+
+.warehouse-asset:active { cursor: grabbing; }
+
+.warehouse-asset.placed {
+  border-color: #d0e1cb;
+  background: #f6faf3;
+}
+
+.warehouse-asset img {
+  display: block;
+  width: 78px;
+  height: 68px;
+  object-fit: contain;
+}
+
+.warehouse-asset span {
+  width: 100%;
+  overflow: hidden;
+  color: #334036;
+  font-size: 12px;
+  font-weight: 700;
+  text-align: center;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.warehouse-asset small {
+  color: #90978f;
+  font-size: 10px;
 }
 
 .warehouse-page .warehouse-empty {
