@@ -285,19 +285,27 @@ function Plant({ growth }: { growth: number }) {
  * 首页生态箱只提供容器和留白；以后解锁的植物、石头等素材会叠放在
  * terrarium-slots 中，而不是烘焙进背景图里。
  */
-function HomeTerrarium({ growth }: { growth: number }) {
+function HomeTerrarium({
+  growth,
+  showProgress = true,
+}: {
+  growth: number;
+  showProgress?: boolean;
+}) {
   const progress = Math.max(0, Math.min(100, growth));
 
   return (
     <section className="terrarium-stage" aria-label="生态箱场景">
-      <div className="terrarium-growth" aria-label={`生态成长进度 ${progress}%`}>
-        <svg viewBox="0 0 24 24" aria-hidden="true">
-          <path d="M19.3 4.7C13.4 4.8 8.1 7.1 5.8 12.2c-1.1 2.5-.8 5 .7 7.1 2.5-4.3 6-7 10.8-8.6-4.2 2.6-7.1 5.6-8.9 9.1" />
-        </svg>
-        <span className="terrarium-growth-track" aria-hidden="true">
-          <span className="terrarium-growth-fill" style={{ width: `${progress}%` }} />
-        </span>
-      </div>
+      {showProgress && (
+        <div className="terrarium-growth" aria-label={`生态成长进度 ${progress}%`}>
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M19.3 4.7C13.4 4.8 8.1 7.1 5.8 12.2c-1.1 2.5-.8 5 .7 7.1 2.5-4.3 6-7 10.8-8.6-4.2 2.6-7.1 5.6-8.9 9.1" />
+          </svg>
+          <span className="terrarium-growth-track" aria-hidden="true">
+            <span className="terrarium-growth-fill" style={{ width: `${progress}%` }} />
+          </span>
+        </div>
+      )}
       <img
         className="terrarium-stage-art"
         src="/home-assets/terrarium-tank.png"
@@ -366,18 +374,18 @@ function Nav({ view, setView }: { view: View; setView: (v: View) => void }) {
         <span>今日</span>
       </button>
       <button
-        className={view === "trend" ? "active" : ""}
-        onClick={() => setView("trend")}
-      >
-        <IllustratedIcon kind="trend" size="nav" />
-        <span>趋势</span>
-      </button>
-      <button
         className={view === "warehouse" ? "active" : ""}
         onClick={() => setView("warehouse")}
       >
         <IllustratedIcon kind="warehouse" size="nav" />
         <span>仓库</span>
+      </button>
+      <button
+        className={view === "trend" ? "active" : ""}
+        onClick={() => setView("trend")}
+      >
+        <IllustratedIcon kind="trend" size="nav" />
+        <span>趋势</span>
       </button>
       <button
         className={view === "settings" ? "active" : ""}
@@ -1967,14 +1975,24 @@ export default function Page() {
         </section>
       )}
       {view === "warehouse" && (
-        <section className="page">
-          <header className="title">
-            <h1>仓库</h1>
-          </header>
-          <section className="card warehouse-empty">
-            <IllustratedIcon kind="warehouse" size="action" />
-            <b>生态箱素材会在这里出现</b>
-            <small>完成记录、获得新素材后，就能从这里挑选并布置。</small>
+        <section className="page warehouse-page">
+          <HomeTerrarium growth={growth} showProgress={false} />
+          <section className="warehouse-panel" aria-label="生态箱素材仓库">
+            <header className="warehouse-heading">
+              <h1>仓库</h1>
+              <p>点击或拖动素材，放进上方生态箱</p>
+            </header>
+            <div className="warehouse-categories" aria-label="素材分类">
+              <button type="button" className="active">全部</button>
+              <button type="button">铺底</button>
+              <button type="button">植物</button>
+              <button type="button">石头</button>
+            </div>
+            <section className="warehouse-empty">
+              <IllustratedIcon kind="warehouse" size="action" />
+              <b>生态箱素材会在这里出现</b>
+              <small>完成记录、获得新素材后，就能从这里挑选并布置。</small>
+            </section>
           </section>
         </section>
       )}

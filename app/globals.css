@@ -3887,3 +3887,114 @@ nav {
 
 .back h1 { line-height: 1.08; }
 .back p { margin: 3px 0 0; }
+
+/* 仓库：上方始终保留生态箱画布，下方才是可收集、可摆放的素材区。 */
+.warehouse-page {
+  display: grid;
+  grid-template-rows: minmax(0, 55%) minmax(0, calc(45% - 78px));
+  min-height: 100%;
+  padding: 0;
+  overflow: hidden;
+  background: #fff;
+}
+
+.warehouse-page > .terrarium-stage {
+  min-height: 0;
+}
+
+.warehouse-panel {
+  z-index: 2;
+  min-height: 0;
+  margin-top: -22px;
+  padding: 27px 18px 15px;
+  overflow: auto;
+  border-radius: 34px 34px 0 0;
+  background: #fff;
+  box-shadow: 0 -8px 24px rgb(64 69 51 / 5%);
+}
+
+.warehouse-heading {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.warehouse-heading h1 {
+  margin: 0;
+  color: #202a22;
+  font-size: 25px;
+  line-height: 1;
+}
+
+.warehouse-heading p {
+  margin: 0;
+  color: #879087;
+  font-size: 11px;
+  line-height: 1.45;
+  text-align: right;
+}
+
+.warehouse-categories {
+  display: flex;
+  gap: 7px;
+  margin: 15px 0 12px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.warehouse-categories::-webkit-scrollbar { display: none; }
+
+.warehouse-categories button {
+  flex: 0 0 auto;
+  padding: 7px 12px;
+  border: 1px solid #e6e5da;
+  border-radius: 999px;
+  background: #fff;
+  color: #798178;
+  font: inherit;
+  font-size: 12px;
+}
+
+.warehouse-categories button.active {
+  border-color: #d8e2d3;
+  background: #edf3e9;
+  color: #4e714b;
+}
+
+.warehouse-page .warehouse-empty {
+  display: grid;
+  min-height: 146px;
+  padding: 20px;
+  place-items: center;
+  align-content: center;
+  gap: 6px;
+  border: 1px dashed #dedfd5;
+  border-radius: 26px;
+  background: #fcfcf8;
+  text-align: center;
+}
+
+.warehouse-page .warehouse-empty .illustrated-icon {
+  width: 40px;
+  height: 40px;
+}
+
+.warehouse-page .warehouse-empty b {
+  color: #334035;
+  font-size: 14px;
+}
+
+.warehouse-page .warehouse-empty small {
+  max-width: 260px;
+  color: #90968f;
+  font-size: 11px;
+  line-height: 1.55;
+}
+
+@media (max-height: 700px) {
+  .warehouse-page { grid-template-rows: minmax(0, 53%) minmax(0, calc(47% - 70px)); }
+  .warehouse-panel { margin-top: -18px; padding: 23px 15px 10px; border-radius: 28px 28px 0 0; }
+  .warehouse-categories { margin: 11px 0 9px; }
+  .warehouse-page .warehouse-empty { min-height: 106px; padding: 12px; }
+}
