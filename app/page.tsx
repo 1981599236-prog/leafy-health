@@ -3,7 +3,7 @@
 import { ChangeEvent, useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import { cloudApp, cloudAuth, cloudDb } from "../lib/cloudbase";
 
-type View = "home" | "blood" | "food" | "exercise" | "trend" | "settings";
+type View = "home" | "blood" | "food" | "exercise" | "trend" | "warehouse" | "settings";
 type Profile = {
   display_name: string;
   gender: "男" | "女";
@@ -302,7 +302,7 @@ function HomeTerrarium() {
   );
 }
 
-type IllustrationKind = "blood" | "food" | "exercise" | "home" | "trend" | "profile";
+type IllustrationKind = "blood" | "food" | "exercise" | "home" | "trend" | "warehouse" | "profile";
 
 const illustratedAsset: Partial<Record<IllustrationKind, string>> = {
   blood: "/ui-icons/blood-v2.png",
@@ -310,6 +310,7 @@ const illustratedAsset: Partial<Record<IllustrationKind, string>> = {
   exercise: "/ui-icons/exercise-v2.png",
   home: "/ui-icons/home-v2.png",
   trend: "/ui-icons/trend-v2.png",
+  warehouse: "/ui-icons/warehouse-v1.png",
   profile: "/ui-icons/profile-v2.png",
 };
 
@@ -360,6 +361,13 @@ function Nav({ view, setView }: { view: View; setView: (v: View) => void }) {
       >
         <IllustratedIcon kind="trend" size="nav" />
         <span>趋势</span>
+      </button>
+      <button
+        className={view === "warehouse" ? "active" : ""}
+        onClick={() => setView("warehouse")}
+      >
+        <IllustratedIcon kind="warehouse" size="nav" />
+        <span>仓库</span>
       </button>
       <button
         className={view === "settings" ? "active" : ""}
@@ -1949,6 +1957,19 @@ export default function Page() {
             month={now.getMonth() + 1}
             today={now.getDate()}
           />
+        </section>
+      )}
+      {view === "warehouse" && (
+        <section className="page">
+          <header className="title">
+            <p>慢慢收集，慢慢布置</p>
+            <h1>仓库</h1>
+          </header>
+          <section className="card warehouse-empty">
+            <IllustratedIcon kind="warehouse" size="action" />
+            <b>生态箱素材会在这里出现</b>
+            <small>完成记录、获得新素材后，就能从这里挑选并布置。</small>
+          </section>
         </section>
       )}
       {view === "settings" && (

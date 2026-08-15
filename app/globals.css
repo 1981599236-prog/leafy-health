@@ -3173,6 +3173,29 @@ nav button { color: #778075; }
 nav .active { color: #20251f; }
 nav .active .illustrated-icon-nav { filter: drop-shadow(0 2px 0 #f2c83d); }
 
+.warehouse-empty {
+  min-height: 220px;
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: 10px;
+  text-align: center;
+}
+
+.warehouse-empty .illustrated-icon-action {
+  width: 68px;
+  height: 68px;
+}
+
+.warehouse-empty b {
+  font-size: 16px;
+}
+
+.warehouse-empty small {
+  max-width: 220px;
+  line-height: 1.6;
+}
+
 .toast { border-color: #38483a; background: #29372c; color: #fffef7; }
 
 @media (prefers-reduced-motion: no-preference) {
