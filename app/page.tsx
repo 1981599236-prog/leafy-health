@@ -285,9 +285,19 @@ function Plant({ growth }: { growth: number }) {
  * 首页生态箱只提供容器和留白；以后解锁的植物、石头等素材会叠放在
  * terrarium-slots 中，而不是烘焙进背景图里。
  */
-function HomeTerrarium() {
+function HomeTerrarium({ growth }: { growth: number }) {
+  const progress = Math.max(0, Math.min(100, growth));
+
   return (
     <section className="terrarium-stage" aria-label="生态箱场景">
+      <div className="terrarium-growth" aria-label={`生态成长进度 ${progress}%`}>
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M19.3 4.7C13.4 4.8 8.1 7.1 5.8 12.2c-1.1 2.5-.8 5 .7 7.1 2.5-4.3 6-7 10.8-8.6-4.2 2.6-7.1 5.6-8.9 9.1" />
+        </svg>
+        <span className="terrarium-growth-track" aria-hidden="true">
+          <span className="terrarium-growth-fill" style={{ width: `${progress}%` }} />
+        </span>
+      </div>
       <img
         className="terrarium-stage-art"
         src="/home-assets/terrarium-tank.png"
@@ -390,7 +400,11 @@ function Back({
 }) {
   return (
     <header className="back">
-      <button onClick={go}>‹</button>
+      <button onClick={go} aria-label="返回">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="m14.5 5-7 7 7 7" />
+        </svg>
+      </button>
       <div>
         <h1>{title}</h1>
         <p>{subtitle}</p>
@@ -792,7 +806,6 @@ export default function Page() {
         });
       setBloodDone(true);
       setChecked((current) => new Set(current).add(now.getDate()));
-      setToast("血压和心率已记录，小叶子长高一点");
     } catch (error) {
       savedBlood.current = "";
       setToast(`保存失败：${errorMessage(error)}`);
@@ -879,7 +892,6 @@ export default function Page() {
       setFoodAnalysis(null);
       setFoodNote("");
       setView("home");
-      setToast("饮食已记录，成长值 +30");
     } catch (error) {
       setToast(`保存失败：${errorMessage(error)}`);
     }
@@ -910,7 +922,6 @@ export default function Page() {
       });
       setExerciseTotal((x) => x + calories);
       setChecked((current) => new Set(current).add(now.getDate()));
-      setToast(`${item.activity_type} 已记录，预计消耗 ${calories} kcal`);
     } catch (error) {
       setToast(`保存失败：${errorMessage(error)}`);
     }
@@ -1213,11 +1224,9 @@ export default function Page() {
     <main className={`shell app ${view === "home" ? "home-preview" : ""}`}>
       {view === "home" && (
         <section className="page today-home">
-          <HomeTerrarium />
+          <HomeTerrarium growth={growth} />
           <div className="task-zone">
-            <h2 className="sectiontitle">
-              今天，做这三件小事 <i>{growth}/90</i>
-            </h2>
+            <h2 className="sectiontitle">今天，做这三件小事</h2>
             <div className="quick-actions">
             <Action
               icon="blood"
@@ -1319,7 +1328,6 @@ export default function Page() {
               </span>
             </div>
           )}
-          <p className="helper">不做判断，只为你留下一份温和的日常参考。</p>
         </section>
       )}
       {view === "food" && (
@@ -1896,7 +1904,6 @@ export default function Page() {
       {view === "trend" && (
         <section className="page">
           <header className="title">
-            <p>慢慢看见你的变化</p>
             <h1>健康趋势</h1>
           </header>
           <div className="trend-tabs" aria-label="趋势范围">
@@ -1962,7 +1969,6 @@ export default function Page() {
       {view === "warehouse" && (
         <section className="page">
           <header className="title">
-            <p>慢慢收集，慢慢布置</p>
             <h1>仓库</h1>
           </header>
           <section className="card warehouse-empty">
@@ -1975,7 +1981,6 @@ export default function Page() {
       {view === "settings" && (
         <section className="page">
           <header className="title">
-            <p>留一点空间给自己</p>
             <h1>我的</h1>
           </header>
           <div className="profilecard">

@@ -3808,3 +3808,82 @@ nav {
   .today-home .quick-actions .action { grid-template-columns: minmax(0, 1fr) 56px; border-radius: 20px; }
   .today-home .home-task-icon { width: 56px; height: 56px; }
 }
+
+/* 生态成长：轻量进度反馈，记录完成后仅通过进度变化提示。 */
+.terrarium-growth {
+  position: absolute;
+  z-index: 5;
+  top: 13px;
+  left: 16px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: 118px;
+  color: #71936a;
+  pointer-events: none;
+}
+
+.terrarium-growth svg {
+  width: 14px;
+  height: 14px;
+  flex: 0 0 auto;
+  fill: none;
+  stroke: currentcolor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.8;
+}
+
+.terrarium-growth-track {
+  display: block;
+  flex: 1;
+  height: 3px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: rgb(112 145 104 / 18%);
+}
+
+.terrarium-growth-fill {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: #80aa74;
+  transition: width 560ms cubic-bezier(.22, 1, .36, 1);
+}
+
+/* 返回操作与标题以同一基线居中，避免箭头视觉偏低。 */
+.back {
+  align-items: center;
+  gap: 10px;
+}
+
+.back > button {
+  display: grid;
+  width: 34px;
+  height: 34px;
+  min-width: 34px;
+  margin: 0;
+  padding: 0;
+  place-items: center;
+  line-height: 0;
+}
+
+.back > button svg {
+  width: 16px;
+  height: 16px;
+  fill: none;
+  stroke: currentcolor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 2.4;
+}
+
+.back > div {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.back h1 { line-height: 1.08; }
+.back p { margin: 3px 0 0; }
