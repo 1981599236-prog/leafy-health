@@ -322,6 +322,9 @@ const starterTerrariumAssets: TerrariumAsset[] = [
   },
 ];
 
+// 仓库初始展示两件测试素材，方便确认生态箱内的摆放效果。
+const initialPlacedTerrariumAssetIds = ["plant-fern", "rock-moss"];
+
 /**
  * 首页生态箱提供画布；已放置素材会作为独立图层覆盖在玻璃缸中，
  * 后续可继续扩展为自由移动、缩放和前中后景。
@@ -539,7 +542,9 @@ export default function Page() {
     [aiConfigLoading, setAiConfigLoading] = useState(false),
     [aiConfigSaving, setAiConfigSaving] = useState(false),
     [aiSettingsOpen, setAiSettingsOpen] = useState(false);
-  const [placedTerrariumAssetIds, setPlacedTerrariumAssetIds] = useState<string[]>([]),
+  const [placedTerrariumAssetIds, setPlacedTerrariumAssetIds] = useState<string[]>(
+    initialPlacedTerrariumAssetIds,
+  ),
     [warehouseCategory, setWarehouseCategory] = useState<"all" | TerrariumAssetCategory>("all");
   const savedBlood = useRef("");
   const now = new Date();
