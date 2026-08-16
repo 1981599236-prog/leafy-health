@@ -3959,8 +3959,9 @@ nav {
 /* 仓库：上方始终保留生态箱画布，下方才是可收集、可摆放的素材区。 */
 .warehouse-page {
   display: grid;
-  grid-template-rows: minmax(0, 55%) minmax(0, calc(45% - 78px));
-  min-height: 100%;
+  grid-template-rows: minmax(0, 59%) minmax(0, calc(41% - 78px));
+  height: 100dvh;
+  min-height: 100dvh;
   padding: 0;
   overflow: hidden;
   background: #fff;
@@ -3971,11 +3972,13 @@ nav {
 }
 
 .warehouse-panel {
+  display: grid;
+  grid-template-rows: auto auto minmax(0, 1fr);
   z-index: 2;
   min-height: 0;
-  margin-top: -22px;
-  padding: 27px 18px 15px;
-  overflow: auto;
+  margin-top: -24px;
+  padding: 28px 18px 10px;
+  overflow: hidden;
   border-radius: 34px 34px 0 0;
   background: #fff;
   box-shadow: 0 -8px 24px rgb(64 69 51 / 5%);
@@ -4042,15 +4045,22 @@ nav {
 .warehouse-assets {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
+  min-height: 0;
   gap: 10px;
-  padding-bottom: 10px;
+  padding: 2px 0 8px;
+  overflow-y: auto;
+  align-content: start;
+  overscroll-behavior: contain;
+  scrollbar-width: none;
 }
+
+.warehouse-assets::-webkit-scrollbar { display: none; }
 
 .warehouse-asset {
   position: relative;
   display: grid;
-  min-height: 128px;
-  padding: 10px;
+  min-height: 108px;
+  padding: 8px;
   place-items: center;
   border: 1px solid #e6e5da;
   border-radius: 22px;
@@ -4070,8 +4080,8 @@ nav {
 
 .warehouse-asset img {
   display: block;
-  width: 78px;
-  height: 68px;
+  width: 74px;
+  height: 58px;
   object-fit: contain;
 }
 
@@ -4122,7 +4132,7 @@ nav {
 }
 
 @media (max-height: 700px) {
-  .warehouse-page { grid-template-rows: minmax(0, 53%) minmax(0, calc(47% - 70px)); }
+  .warehouse-page { grid-template-rows: minmax(0, 57%) minmax(0, calc(43% - 70px)); }
   .warehouse-panel { margin-top: -18px; padding: 23px 15px 10px; border-radius: 28px 28px 0 0; }
   .warehouse-categories { margin: 11px 0 9px; }
   .warehouse-page .warehouse-empty { min-height: 106px; padding: 12px; }
