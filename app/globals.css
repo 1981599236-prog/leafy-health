@@ -3708,61 +3708,73 @@ nav {
   z-index: 3;
   inset: 35% 10% 10%;
   pointer-events: none;
+  touch-action: none;
 }
 
 .terrarium-placed-asset {
   position: absolute;
   display: grid;
   place-items: center;
+  left: var(--asset-x);
+  top: var(--asset-y);
+  width: var(--asset-size);
+  transform: translate(-50%, -50%) scale(var(--asset-scale));
+  transform-origin: center;
   pointer-events: auto;
+  touch-action: none;
+  cursor: grab;
+  transition: filter 160ms ease, opacity 160ms ease;
 }
 
 .terrarium-placed-asset img {
   display: block;
   width: 100%;
-  height: 100%;
+  height: auto;
+  max-height: 100%;
   object-fit: contain;
   filter: drop-shadow(0 7px 8px rgb(54 72 54 / 14%));
+  user-select: none;
 }
 
-.terrarium-placed-asset.asset-ground {
+.terrarium-placed-asset:active {
+  cursor: grabbing;
+}
+
+.terrarium-placed-asset.layer-back {
   z-index: 1;
-  inset: auto 0 0;
-  width: 100%;
-  height: 32%;
 }
 
-.terrarium-placed-asset.asset-plant {
-  z-index: 3;
-  bottom: 7%;
-  left: 15%;
-  width: 34%;
-  height: 58%;
+.terrarium-placed-asset.layer-back img {
+  opacity: 0.58;
+  filter: brightness(0.79) saturate(0.78) blur(0.45px) drop-shadow(0 5px 7px rgb(54 72 54 / 12%));
+  transform: scale(0.91);
 }
 
-.terrarium-placed-asset.asset-stone {
+.terrarium-placed-asset.layer-middle {
   z-index: 2;
-  right: 12%;
-  bottom: 8%;
-  width: 31%;
-  height: 35%;
 }
 
-.terrarium-placed-asset.asset-mushroom {
+.terrarium-placed-asset.layer-front {
   z-index: 4;
-  bottom: 10%;
-  left: 43%;
-  width: 22%;
-  height: 24%;
+}
+
+.terrarium-placed-asset.layer-front img {
+  filter: brightness(1.03) saturate(1.04) drop-shadow(0 8px 10px rgb(54 72 54 / 17%));
+  transform: scale(1.05);
+}
+
+.terrarium-placed-asset.selected {
+  z-index: 7;
+}
+
+.terrarium-placed-asset.selected img {
+  filter: drop-shadow(0 0 0 rgb(255 255 255 / 90%)) drop-shadow(0 6px 9px rgb(52 78 49 / 30%));
 }
 
 .terrarium-placed-remove {
-  position: absolute;
-  top: 2px;
-  right: 2px;
   display: grid;
-  width: 20px;
-  height: 20px;
+  width: 22px;
+  height: 22px;
   padding: 0;
   place-items: center;
   border: 0;
@@ -3771,18 +3783,90 @@ nav {
   color: #fff;
   font-size: 16px;
   line-height: 1;
-  opacity: 0;
-  transition: opacity 160ms ease;
 }
 
-.terrarium-placed-asset:hover .terrarium-placed-remove,
-.terrarium-placed-asset:focus-within .terrarium-placed-remove {
-  opacity: 1;
+.terrarium-asset-controls {
+  position: absolute;
+  left: 50%;
+  bottom: calc(100% + 8px);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: max-content;
+  max-width: min(220px, 82vw);
+  padding: 6px 7px;
+  transform: translateX(-50%) scale(calc(1 / var(--asset-scale)));
+  transform-origin: bottom center;
+  border: 1px solid rgb(223 232 216 / 92%);
+  border-radius: 14px;
+  background: rgb(255 255 252 / 94%);
+  box-shadow: 0 6px 18px rgb(45 58 40 / 14%);
+}
+
+.terrarium-scale-control {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.terrarium-scale-control span {
+  display: block;
+  flex: 0 0 auto;
+  border-radius: 50%;
+  background: #71846d;
+}
+
+.terrarium-scale-control .small {
+  width: 4px;
+  height: 4px;
+}
+
+.terrarium-scale-control .large {
+  width: 8px;
+  height: 8px;
+}
+
+.terrarium-scale-control input[type="range"] {
+  width: 54px;
+  accent-color: #668b5f;
+}
+
+.terrarium-layer-controls {
+  display: flex;
+  gap: 3px;
+  padding-left: 5px;
+  border-left: 1px solid #e6eadf;
+}
+
+.terrarium-layer-controls button {
+  display: grid;
+  width: 18px;
+  height: 20px;
+  padding: 0;
+  place-items: center;
+  border: 0;
+  border-radius: 7px;
+  background: transparent;
+}
+
+.terrarium-layer-controls button span {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #9da99b;
+}
+
+.terrarium-layer-controls button.active {
+  background: #eaf2e6;
+}
+
+.terrarium-layer-controls button.active span {
+  background: #537a50;
 }
 
 @media (hover: none) {
-  .terrarium-placed-remove {
-    opacity: 1;
+  .terrarium-asset-controls {
+    bottom: calc(100% + 5px);
   }
 }
 
@@ -3959,9 +4043,9 @@ nav {
 /* 仓库：上方始终保留生态箱画布，下方才是可收集、可摆放的素材区。 */
 .warehouse-page {
   display: grid;
-  grid-template-rows: minmax(0, 59%) minmax(0, calc(41% - 78px));
-  height: 100dvh;
-  min-height: 100dvh;
+  grid-template-rows: minmax(235px, 56%) minmax(0, 1fr);
+  height: calc(100dvh - 78px);
+  min-height: calc(100dvh - 78px);
   padding: 0;
   overflow: hidden;
   background: #fff;
@@ -4132,7 +4216,7 @@ nav {
 }
 
 @media (max-height: 700px) {
-  .warehouse-page { grid-template-rows: minmax(0, 57%) minmax(0, calc(43% - 70px)); }
+  .warehouse-page { grid-template-rows: minmax(210px, 55%) minmax(0, 1fr); }
   .warehouse-panel { margin-top: -18px; padding: 23px 15px 10px; border-radius: 28px 28px 0 0; }
   .warehouse-categories { margin: 11px 0 9px; }
   .warehouse-page .warehouse-empty { min-height: 106px; padding: 12px; }

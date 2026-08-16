@@ -1,6 +1,14 @@
 "use client";
 
-import { ChangeEvent, useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
+import {
+  ChangeEvent,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type CSSProperties,
+  type PointerEvent as ReactPointerEvent,
+} from "react";
 import { cloudApp, cloudAuth, cloudDb } from "../lib/cloudbase";
 
 type View = "home" | "blood" | "food" | "exercise" | "trend" | "warehouse" | "settings";
@@ -288,7 +296,16 @@ type TerrariumAsset = {
   name: string;
   category: TerrariumAssetCategory;
   src: string;
-  placementClass: string;
+  displaySize: number;
+};
+
+type TerrariumLayer = "back" | "middle" | "front";
+
+type TerrariumPlacement = {
+  x: number;
+  y: number;
+  scale: number;
+  layer: TerrariumLayer;
 };
 
 const starterTerrariumAssets: TerrariumAsset[] = [
@@ -297,33 +314,67 @@ const starterTerrariumAssets: TerrariumAsset[] = [
     name: "苔藓铺底",
     category: "ground",
     src: "/terrarium-assets/ground-moss.png",
-    placementClass: "asset-ground",
+    displaySize: 92,
   },
   {
     id: "plant-fern",
     name: "小蕨叶",
     category: "plant",
     src: "/terrarium-assets/plant-fern.png",
-    placementClass: "asset-plant",
+    displaySize: 34,
   },
   {
     id: "rock-moss",
     name: "苔石",
     category: "stone",
     src: "/terrarium-assets/rock-moss.png",
-    placementClass: "asset-stone",
+    displaySize: 31,
   },
   {
     id: "mushroom-cluster",
     name: "小蘑菇",
     category: "mushroom",
     src: "/terrarium-assets/mushroom-cluster.png",
-    placementClass: "asset-mushroom",
+    displaySize: 22,
   },
 ];
 
 // 仓库初始展示两件测试素材，方便确认生态箱内的摆放效果。
 const initialPlacedTerrariumAssetIds = ["plant-fern", "rock-moss"];
+const terrariumStorageKey = "leafy-health:terrarium-layout:v1";
+const defaultTerrariumPlacements: Record<string, TerrariumPlacement> = {
+  "ground-moss": { x: 50, y: 84, scale: 1, layer: "back" },
+  "plant-fern": { x: 31, y: 54, scale: 1, layer: "middle" },
+  "rock-moss": { x: 73, y: 76, scale: 0.95, layer: "middle" },
+  "mushroom-cluster": { x: 54, y: 77, scale: 1, layer: "front" },
+};
+const terrariumLayers: TerrariumLayer[] = ["back", "middle", "front"];
+
+const clampTerrariumValue = (value: number, minimum: number, maximum: number) =>
+  Math.max(minimum, Math.min(maximum, value));
+
+function restoreTerrariumPlacements(value: unknown): Record<string, TerrariumPlacement> {
+  if (!value || typeof value !== "object") return defaultTerrariumPlacements;
+  const saved = value as Record<string, Partial<TerrariumPlacement>>;
+  return starterTerrariumAssets.reduce<Record<string, TerrariumPlacement>>((placements, asset) => {
+    const placement = saved[asset.id];
+    if (
+      placement &&
+      typeof placement.x === "number" &&
+      typeof placement.y === "number" &&
+      typeof placement.scale === "number" &&
+      terrariumLayers.includes(placement.layer as TerrariumLayer)
+    ) {
+      placements[asset.id] = {
+        x: clampTerrariumValue(placement.x, 6, 94),
+        y: clampTerrariumValue(placement.y, 18, 93),
+        scale: clampTerrariumValue(placement.scale, 0.65, 1.35),
+        layer: placement.layer as TerrariumLayer,
+      };
+    }
+    return placements;
+  }, { ...defaultTerrariumPlacements });
+}
 
 /**
  * 首页生态箱提供画布；已放置素材会作为独立图层覆盖在玻璃缸中，
@@ -333,21 +384,42 @@ function HomeTerrarium({
   growth,
   showProgress = true,
   assets = [],
+  placements = defaultTerrariumPlacements,
   onDropAsset,
   onReturnAsset,
+  onUpdatePlacement,
 }: {
   growth: number;
   showProgress?: boolean;
   assets?: TerrariumAsset[];
+  placements?: Record<string, TerrariumPlacement>;
   onDropAsset?: (assetId: string) => void;
   onReturnAsset?: (assetId: string) => void;
+  onUpdatePlacement?: (assetId: string, update: Partial<TerrariumPlacement>) => void;
 }) {
   const progress = Math.max(0, Math.min(100, growth));
+  const [selectedAssetId, setSelectedAssetId] = useState<string | null>(null);
+  const placedAssetsRef = useRef<HTMLDivElement>(null);
+  const activePointer = useRef<{ assetId: string; pointerId: number } | null>(null);
+  const editable = Boolean(onUpdatePlacement);
+
+  const moveAsset = (event: ReactPointerEvent<HTMLDivElement>, assetId: string) => {
+    const canvas = placedAssetsRef.current;
+    if (!canvas || !onUpdatePlacement) return;
+    const bounds = canvas.getBoundingClientRect();
+    onUpdatePlacement(assetId, {
+      x: clampTerrariumValue(((event.clientX - bounds.left) / bounds.width) * 100, 6, 94),
+      y: clampTerrariumValue(((event.clientY - bounds.top) / bounds.height) * 100, 18, 93),
+    });
+  };
 
   return (
     <section
       className="terrarium-stage"
       aria-label="生态箱场景"
+      onPointerDown={() => {
+        if (editable) setSelectedAssetId(null);
+      }}
       onDragOver={(event) => {
         if (onDropAsset) event.preventDefault();
       }}
@@ -372,25 +444,91 @@ function HomeTerrarium({
         src="/home-assets/terrarium-tank.png"
         alt=""
       />
-      <div className="terrarium-placed-assets" aria-label="已摆放的生态箱素材">
-        {assets.map((asset) => (
+      <div ref={placedAssetsRef} className="terrarium-placed-assets" aria-label="已摆放的生态箱素材">
+        {assets.map((asset) => {
+          const placement = placements[asset.id] ?? defaultTerrariumPlacements[asset.id];
+          const selected = selectedAssetId === asset.id;
+          return (
           <div
             key={asset.id}
-            className={`terrarium-placed-asset ${asset.placementClass}`}
+            className={`terrarium-placed-asset layer-${placement.layer} ${selected ? "selected" : ""}`}
+            style={{
+              "--asset-x": `${placement.x}%`,
+              "--asset-y": `${placement.y}%`,
+              "--asset-size": `${asset.displaySize}%`,
+              "--asset-scale": placement.scale,
+            } as CSSProperties}
+            onPointerDown={(event) => {
+              if (!editable) return;
+              event.preventDefault();
+              event.stopPropagation();
+              setSelectedAssetId(asset.id);
+              activePointer.current = { assetId: asset.id, pointerId: event.pointerId };
+              event.currentTarget.setPointerCapture(event.pointerId);
+            }}
+            onPointerMove={(event) => {
+              if (
+                activePointer.current?.assetId === asset.id &&
+                activePointer.current.pointerId === event.pointerId
+              ) {
+                event.preventDefault();
+                moveAsset(event, asset.id);
+              }
+            }}
+            onPointerUp={(event) => {
+              if (activePointer.current?.pointerId === event.pointerId) {
+                activePointer.current = null;
+                event.currentTarget.releasePointerCapture(event.pointerId);
+              }
+            }}
+            onPointerCancel={() => {
+              activePointer.current = null;
+            }}
           >
             <img src={asset.src} alt={asset.name} draggable={false} />
-            {onReturnAsset && (
-              <button
-                type="button"
-                className="terrarium-placed-remove"
-                aria-label={`将${asset.name}放回仓库`}
-                onClick={() => onReturnAsset(asset.id)}
-              >
-                ×
-              </button>
+            {editable && selected && (
+              <div className="terrarium-asset-controls" onPointerDown={(event) => event.stopPropagation()}>
+                <div className="terrarium-scale-control">
+                  <span className="small" aria-hidden="true" />
+                  <input
+                    type="range"
+                    aria-label={`${asset.name}大小`}
+                    min="0.65"
+                    max="1.35"
+                    step="0.05"
+                    value={placement.scale}
+                    onChange={(event) => onUpdatePlacement?.(asset.id, { scale: Number(event.target.value) })}
+                  />
+                  <span className="large" aria-hidden="true" />
+                </div>
+                <div className="terrarium-layer-controls" aria-label={`${asset.name}层级`}>
+                  {terrariumLayers.map((layer) => (
+                    <button
+                      key={layer}
+                      type="button"
+                      className={placement.layer === layer ? "active" : ""}
+                      aria-label={`${asset.name}切换至${layer === "back" ? "后景" : layer === "middle" ? "中景" : "前景"}`}
+                      onClick={() => onUpdatePlacement?.(asset.id, { layer })}
+                    >
+                      <span />
+                    </button>
+                  ))}
+                </div>
+                {onReturnAsset && (
+                  <button
+                    type="button"
+                    className="terrarium-placed-remove"
+                    aria-label={`将${asset.name}放回仓库`}
+                    onClick={() => onReturnAsset(asset.id)}
+                  >
+                    ×
+                  </button>
+                )}
+              </div>
             )}
           </div>
-        ))}
+          );
+        })}
       </div>
     </section>
   );
@@ -545,6 +683,10 @@ export default function Page() {
   const [placedTerrariumAssetIds, setPlacedTerrariumAssetIds] = useState<string[]>(
     initialPlacedTerrariumAssetIds,
   ),
+    [terrariumPlacements, setTerrariumPlacements] = useState<Record<string, TerrariumPlacement>>(
+      defaultTerrariumPlacements,
+    ),
+    [terrariumStateLoaded, setTerrariumStateLoaded] = useState(false),
     [warehouseCategory, setWarehouseCategory] = useState<"all" | TerrariumAssetCategory>("all");
   const savedBlood = useRef("");
   const now = new Date();
@@ -585,9 +727,23 @@ export default function Page() {
     setPlacedTerrariumAssetIds((assetIds) =>
       assetIds.includes(assetId) ? assetIds : [...assetIds, assetId],
     );
+    setTerrariumPlacements((placements) =>
+      placements[assetId]
+        ? placements
+        : { ...placements, [assetId]: defaultTerrariumPlacements[assetId] },
+    );
   };
   const returnTerrariumAsset = (assetId: string) => {
     setPlacedTerrariumAssetIds((assetIds) => assetIds.filter((id) => id !== assetId));
+  };
+  const updateTerrariumPlacement = (
+    assetId: string,
+    update: Partial<TerrariumPlacement>,
+  ) => {
+    setTerrariumPlacements((placements) => ({
+      ...placements,
+      [assetId]: { ...(placements[assetId] ?? defaultTerrariumPlacements[assetId]), ...update },
+    }));
   };
   const days = Array.from(
     { length: new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate() },
@@ -672,6 +828,37 @@ export default function Page() {
       active = false;
     };
   }, []);
+  useEffect(() => {
+    try {
+      const saved = window.localStorage.getItem(terrariumStorageKey);
+      if (saved) {
+        const state = JSON.parse(saved) as {
+          placedAssetIds?: unknown;
+          placements?: unknown;
+        };
+        if (Array.isArray(state.placedAssetIds)) {
+          const knownIds = new Set(starterTerrariumAssets.map((asset) => asset.id));
+          setPlacedTerrariumAssetIds(
+            state.placedAssetIds.filter(
+              (assetId): assetId is string => typeof assetId === "string" && knownIds.has(assetId),
+            ),
+          );
+        }
+        setTerrariumPlacements(restoreTerrariumPlacements(state.placements));
+      }
+    } catch {
+      // 浏览器存储不可用或旧数据损坏时，继续使用默认测试摆放。
+    } finally {
+      setTerrariumStateLoaded(true);
+    }
+  }, []);
+  useEffect(() => {
+    if (!terrariumStateLoaded) return;
+    window.localStorage.setItem(
+      terrariumStorageKey,
+      JSON.stringify({ placedAssetIds: placedTerrariumAssetIds, placements: terrariumPlacements }),
+    );
+  }, [placedTerrariumAssetIds, terrariumPlacements, terrariumStateLoaded]);
   useEffect(() => {
     if (user) {
       setDataReady(false);
@@ -1326,7 +1513,11 @@ export default function Page() {
     <main className={`shell app ${view === "home" ? "home-preview" : ""}`}>
       {view === "home" && (
         <section className="page today-home">
-          <HomeTerrarium growth={growth} assets={placedTerrariumAssets} />
+          <HomeTerrarium
+            growth={growth}
+            assets={placedTerrariumAssets}
+            placements={terrariumPlacements}
+          />
           <div className="task-zone">
             <h2 className="sectiontitle">今天，做这三件小事</h2>
             <div className="quick-actions">
@@ -2074,8 +2265,10 @@ export default function Page() {
             growth={growth}
             showProgress={false}
             assets={placedTerrariumAssets}
+            placements={terrariumPlacements}
             onDropAsset={placeTerrariumAsset}
             onReturnAsset={returnTerrariumAsset}
+            onUpdatePlacement={updateTerrariumPlacement}
           />
           <section className="warehouse-panel" aria-label="生态箱素材仓库">
             <header className="warehouse-heading">
