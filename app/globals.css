@@ -3706,7 +3706,10 @@ nav {
 .terrarium-placed-assets {
   position: absolute;
   z-index: 3;
-  inset: 35% 10% 10%;
+  top: 35%;
+  right: 10%;
+  left: 10%;
+  height: 44.5%;
   pointer-events: none;
   touch-action: none;
 }
